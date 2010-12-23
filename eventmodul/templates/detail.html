@@ -1,0 +1,40 @@
+{% load i18n %}
+{% get_current_language as active_language %}
+<h2>{{event.get_name}}</h2>
+{% if event.image %}
+    <div id="event-details">
+        <table>
+            <tr>
+                <td height="130"><img src="{{event.image.file.url}}" /></td>
+                <td>
+                    <p>
+                        {{event.address|safe}}
+                        {% if event.map_link %}
+                            <br /><a href="{{event.map_link}}" target="_blank">{% trans "Map" %}</a>
+                        {% endif %}
+                    </p>
+                    <p>
+                        <strong>{{event.date.date}}</strong>
+                        {% if event.signable %}
+                            <a class="signup_btn_top" style="padding-right:215px;" href="{% if request.ajax_request %}#!{% endif %}{% url event_signup event.id %}">{% trans "Sign up" %} »</a>
+                        {% endif %}
+                    </p>
+                </td>
+            </tr>
+        </table>
+    </div>
+{% else %}
+    <p>{{event.address|safe}}</p>
+    <p>
+        <strong>{{event.date.date}}</strong><a class="signup_btn_top" href="{% if request.ajax_request %}#!{% endif %}{% url event_signup event.id %}">{% trans "Sign up" %} »</a>
+    </p>
+{% endif %}
+{% if event.info %}
+  <div id="event-infos">
+      <h3>{% trans "Agenda" %}</h3>
+      {{event.info|safe}}
+  </div>  
+{% endif %}
+{% if event.signable %}
+    <p class="signup_btn"><a href="{% if request.ajax_request %}#!{% endif %}{% url event_signup event.id %}">{% trans "Sign up" %} »</a></p>
+{% endif %}
