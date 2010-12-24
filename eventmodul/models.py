@@ -109,9 +109,9 @@ class Person(models.Model):
 
 class Participant(Person):
     
-    events = models.ManyToManyField(Event, related_name="participants", blank=True)
+    events = models.ManyToManyField(EventPart, related_name="participants", blank=True)
     date_registred = models.DateTimeField(default=datetime.datetime.now(), verbose_name="Signup Date")
-    customer = models.ForeignKey('Customer', blank=True, null=True, default=None)
+    customer = models.ForeignKey('Invitee', blank=True, null=True, default=None)
     confirmed = models.BooleanField(default=False)
     attended = models.BooleanField(default=True)
     
@@ -155,7 +155,7 @@ class Participant(Person):
         message.send()
     
 
-class Customer(Person):
+class Invitee(Person):
     groups = models.ManyToManyField(Group, related_name="customers", blank=True)
     done = models.BooleanField(default=False)
 
