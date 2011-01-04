@@ -1,4 +1,4 @@
-from eventmodul.models import Group, Customer
+from eventmodul.models import Group, Invitee
 
 from django import forms
 from django.conf import settings
@@ -25,7 +25,7 @@ class GroupAdminForm(forms.ModelForm):
                     salutation = 2
                 else:
                     salutation = 0
-                customer = Customer(
+                invitee = Invitee(
                     salutation=salutation,
                     title=row[1],
                     firstname=row[2],
@@ -35,6 +35,6 @@ class GroupAdminForm(forms.ModelForm):
                     email=row[6],
                     language=self.cleaned_data['language'],
                 )
-                customer.save()
-                customer.groups.add(model)
+                invitee.save()
+                invitee.groups.add(model)
         return model

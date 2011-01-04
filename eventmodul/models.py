@@ -1,46 +1,76 @@
-from django.db import models
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-from django.utils.translation import ugettext_lazy as _
-from feincms.module.medialibrary.models import MediaFile
-from django.core.urlresolvers import reverse
-from django.utils import translation
-from django.core import mail
-from django.conf import settings
-from django.template import loader, Context, Template
 from django.contrib.sites.models import Site
+from django.core.urlresolvers import reverse
+from django.db import models
+from django.db.models import Q
+from django.utils import translation
+from django.utils.translation import ugettext_lazy as _
+from django.template import loader, Context, Template
 
+from pennyblack.options import NewsletterReceiverMixin, JobUnitMixin
+
+from feincms.module.medialibrary.models import MediaFile
 from feincms.translations import TranslatedObjectMixin, Translation, \
     TranslatedObjectManager
 
-import hashlib
+import datetime
 import random
 import sys
-import datetime
 
-class Event(models.Model, TranslatedObjectMixin):    
+class Event(models.Model, TranslatedObjectMixin, JobUnitMixin):
+    signup_mail = models.ForeignKey('pennyblack.Newsletter', blank=True,
+        null=True, related_name="signup_events")
+    
     class Meta:
         ordering = ('parts__date',)
         verbose_name = "Event"
         verbose_name_plural = "Events"
             
     def get_participant_count(self):
-        return self.participants.count()
+        count = 0
+        for event_part in self.parts.all():
+            count += event_part.participants.count()
+        return count
     get_participant_count.short_description = "Participants"
 
     
     def __unicode__(self):
         return self.translation.name
+        
+    def get_newsletter_receiver_collections(self):
+        collections = tuple()
+        for part in self.parts.all():
+            collections += ((part.name,'get_newsletter_receivers',
+                {'event_part':part.id}),)
+        return collections
+    
+    def get_newsletter_receivers(self, event_part_id=None):
+        if event_part_id:
+            return self.parts.get(id=event_part_id).participants.all()
+     
+    def get_receiver_filtered_queryset(self, collections=None, **kwargs):
+        q = Q()
+        for collection in collections:
+            q |= Q(events__pk=int(collection))
+            print Participant.objects.filter(events__pk=int(collection))
+        print Participant.objects.filter(q)
+        return Participant.objects.filter(q)
+            
 
 class EventTranslation(Translation(Event)):
     name = models.CharField(max_length=100)
+    
 
 class EventPart(models.Model):
     event = models.ForeignKey(Event, related_name="parts")
     name = models.CharField(max_length=100)
     date = models.DateTimeField()
     signable = models.BooleanField(default=False)
-    maximum_participants = models.IntegerField(default=0, verbose_name="Maximum Participants", help_text="Number of maximum participants or 0 for no limit.")
+    maximum_participants = models.IntegerField(default=0,
+        verbose_name="Maximum Participants",
+        help_text="Number of maximum participants or 0 for no limit.")
 
     class Meta:
         ordering = ('date',)
@@ -48,7 +78,7 @@ class EventPart(models.Model):
         verbose_name_plural = "Event Parts"
     
     def __unicode__(self):
-        return self.name
+        return "%s %s" % (self.event, self.name)
 
     def fully_booked(self):
         """Returns true if event is already fully booked"""
@@ -57,7 +87,7 @@ class EventPart(models.Model):
         return self.get_participant_count() >= self.maximum_participants
     
 
-class Group(models.Model):
+class Group(models.Model, JobUnitMixin):
     name = models.CharField(max_length=100)
     event = models.ForeignKey(Event, null=True, blank=True, default=None,
         help_text="Customers will be redirected to this event"
@@ -74,19 +104,16 @@ class Group(models.Model):
     get_customer_count.short_description = "Customers"
         
 
-class Person(models.Model):
+class Person(models.Model, NewsletterReceiverMixin):
     salutation = models.IntegerField(verbose_name=_('Salutation'), 
         choices=((0,''), (1,_('Mr.')), (2,_('Mrs.'))), default=0)
-    title = models.CharField(verbose_name=_('Title'), max_length=50, blank=True)
+    title = models.CharField(verbose_name=_('Title'), max_length=50,
+        blank=True)
     firstname = models.CharField(verbose_name=_('Firstname'), max_length=100)
     surname = models.CharField(verbose_name=_('Surname'), max_length=100)
-    company = models.CharField(verbose_name=_('Company'), max_length=100)
-    location = models.CharField(verbose_name=_('Location'), max_length=100, blank=True)
     email = models.EmailField(verbose_name=_('E-Mail'))
     language = models.CharField(max_length=5, choices=settings.LANGUAGES, 
-        default=settings.LANGUAGE_CODE, blank=True)
-    email_hash = models.CharField(max_length=32, blank=True)
-    
+        default=settings.LANGUAGE_CODE, blank=True)    
     
     class Meta:
         abstract = True
@@ -100,20 +127,14 @@ class Person(models.Model):
     
     def is_male(self):
         return self.salutation==1
-    
-    def save(self, **kwargs):
-        if self.email_hash == u'':
-            self.email_hash = hashlib.md5(self.email+str(self.id)+str(random.random())).hexdigest()
-        super(Person, self).save(**kwargs)
 
 
 class Participant(Person):
     
-    events = models.ManyToManyField(EventPart, related_name="participants", blank=True)
-    date_registred = models.DateTimeField(default=datetime.datetime.now(), verbose_name="Signup Date")
-    customer = models.ForeignKey('Invitee', blank=True, null=True, default=None)
-    confirmed = models.BooleanField(default=False)
-    attended = models.BooleanField(default=True)
+    events = models.ManyToManyField('EventPart', related_name="participants",
+        blank=True, through="Attendance")
+    invitee = models.ForeignKey('Invitee', blank=True, null=True,
+        default=None)
     
     class Meta:
         ordering = ('surname',)
@@ -131,29 +152,39 @@ class Participant(Person):
             return True
     
     def send_confirm_email(self, event, confirm=True):
-        template = loader.get_template('newsletter/signup.html')
-        weblink = _("To view this email as a web page, click [here]")
-        url = "http://" + Site.objects.all()[0].domain + reverse('event_signup_mail', args=[self.email_hash])
-        weblink = weblink.replace("[",'<a href="'+url+'">').replace("]",'</a>')
-        content = template.render(Context({
-            'NEWSLETTER_URL': settings.NEWSLETTER_URL,
-            'participant': self,
-            'event':event,
-            'weblink': weblink,
-            'confirm': confirm,
-        }))
-        if confirm:
-            subject = _("Confirmation of registration")
-        else:
-            subject = _("The event is fully booked")
-        message = mail.EmailMessage(subject, 
-            content,
-            settings.SIGNUP_MAIL_FROM, [self.email])
-        message.content_subtype = "html"
-        if hasattr(settings, "SIGNUP_MAIL_BCC"):
-            message.bcc.append(settings.SIGNUP_MAIL_BCC)
-        message.send()
+        pass
+        # template = loader.get_template('newsletter/signup.html')
+        # weblink = _("To view this email as a web page, click [here]")
+        # url = "http://" + Site.objects.all()[0].domain + reverse('event_signup_mail', args=[])
+        # weblink = weblink.replace("[",'<a href="'+url+'">').replace("]",'</a>')
+        # content = template.render(Context({
+        #     'NEWSLETTER_URL': settings.NEWSLETTER_URL,
+        #     'participant': self,
+        #     'event':event,
+        #     'weblink': weblink,
+        #     'confirm': confirm,
+        # }))
+        # if confirm:
+        #     subject = _("Confirmation of registration")
+        # else:
+        #     subject = _("The event is fully booked")
+        # message = mail.EmailMessage(subject, 
+        #     content,
+        #     settings.SIGNUP_MAIL_FROM, [self.email])
+        # message.content_subtype = "html"
+        # if hasattr(settings, "SIGNUP_MAIL_BCC"):
+        #     message.bcc.append(settings.SIGNUP_MAIL_BCC)
+        # message.send()
+
+class Attendance(models.Model):
+    participant = models.ForeignKey('Participant')
+    event_part = models.ForeignKey('EventPart')
+    confirmed = models.BooleanField(default=False)
+    attended = models.BooleanField(default=True)
+    date_registred = models.DateTimeField(default=datetime.datetime.now(), verbose_name="Signup Date")
     
+    def __unicode__(self):
+        return '%s is attending %s' % (self.participant, self.event_part)    
 
 class Invitee(Person):
     groups = models.ManyToManyField(Group, related_name="customers", blank=True)

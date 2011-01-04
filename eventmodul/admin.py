@@ -1,16 +1,24 @@
-from eventmodul.models import Event, EventTranslation, EventPart, Participant
-from eventmodul.models import Group, Customer
-from eventmodul.forms_admin import GroupAdminForm
+from eventmodul import forms_admin
+from eventmodul.models import Event, EventTranslation, EventPart,\
+    Participant, Group, Invitee, Attendance
 
-from django.contrib import admin
-from django.http import HttpResponseRedirect, HttpResponse
-from django.core.urlresolvers import reverse
-from django.template.defaultfilters import slugify
 from django.conf import settings
+from django.contrib import admin
+from django.core.context_processors import csrf
+from django.core.urlresolvers import reverse
+from django import forms
+from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import get_object_or_404, render_to_response
+from django.template.defaultfilters import slugify
 
-import threading
-import csv
-import xlwt
+from pennyblack.options import JobUnitAdmin
+
+try:
+    import xlwt
+except ImportError:
+    EXCEL_EXPORT_ACTIVE = False
+else:
+    EXCEL_EXPORT_ACTIVE = True
 
 class EventPartInline(admin.TabularInline):
     model = EventPart
@@ -21,10 +29,14 @@ class EventTranslationInline(admin.StackedInline):
     max_num = len(settings.LANGUAGES)
     
 
-class EventAdmin(admin.ModelAdmin):
+class EventAdmin(JobUnitAdmin):
     inlines = (EventTranslationInline, EventPartInline,)
     list_display = ['__unicode__', 'get_participant_count']
-        
+    collection_selection_form_extra_fields = {
+        'attended': forms.BooleanField(required=False),
+        'confirmed': forms.BooleanField(required=False),
+    }
+    
     def tool_excel_export(self, request, obj, button):
         response = HttpResponse(mimetype="application/ms-excel")
         response['Content-Disposition'] = 'attachment; filename=%s.xls' % (slugify(obj.name),)
@@ -55,7 +67,7 @@ class EventAdmin(admin.ModelAdmin):
         wb.save(response)
         return response
         
-class GroupAdmin(admin.ModelAdmin):
+class GroupAdmin(JobUnitAdmin):
     list_display = ('name', 'get_customer_count',)
     fieldsets = (
         (None, {
@@ -65,20 +77,26 @@ class GroupAdmin(admin.ModelAdmin):
             'fields': ('import_field', 'language',),
         }),
     )
-    form = GroupAdminForm
+    form = forms_admin.GroupAdminForm
+
+class AttendanceInline(admin.StackedInline):
+    model = Attendance
+    extra = 0
+    # readonly_fields = ('signup_date',)
                 
 class ParticipantAdmin(admin.ModelAdmin):
-    list_display = ('firstname', 'surname', 'company', 'location', 'email', 'language', 'date_registred', 'confirmed',)
-    list_filter   = ('language', 'events', 'confirmed',)
-    readonly_fields = ('email_hash', 'customer',)
+    list_display = ('firstname', 'surname', 'email', 'language',)
+    list_filter   = ('language', 'events',)
+    readonly_fields = ('invitee',)
+    inlines = (AttendanceInline,)
 
-class CustomerAdmin(admin.ModelAdmin):
-    list_display = ('firstname', 'surname', 'company', 'location', 'email', 'language', 'done',)
+class InviteeAdmin(admin.ModelAdmin):
+    list_display = ('firstname', 'surname', 'email', 'language', 'done',)
     list_filter   = ('language', 'groups', 'done',)
-    readonly_fields = ('email_hash', 'done',)
+    readonly_fields = ('done',)
     
 
 admin.site.register(Event, EventAdmin)
 admin.site.register(Participant, ParticipantAdmin)
 admin.site.register(Group,GroupAdmin)
-admin.site.register(Customer, CustomerAdmin)
+admin.site.register(Invitee, InviteeAdmin)

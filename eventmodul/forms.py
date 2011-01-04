@@ -1,5 +1,4 @@
-from eventmodul.models import Participant, Feedback, CHOICES_HEAR, \
-    CHOICES_DETAIL, CHOICES_PUBLICATION, CHOICES_YES_NO
+from eventmodul.models import Participant
     
 from django import forms
 from django.utils.translation import ugettext_lazy as _
