@@ -104,7 +104,9 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
     'eventmodul',
-    'south',
+    'pennyblack',
+    'example',
+    # 'south', # only for development
 )
 
 LANGUAGES = (
