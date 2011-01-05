@@ -22,7 +22,7 @@ else:
 
 class EventPartInline(admin.TabularInline):
     model = EventPart
-    extra = 1
+    extra = 0
 
 class EventTranslationInline(admin.StackedInline):
     model = EventTranslation
@@ -31,7 +31,7 @@ class EventTranslationInline(admin.StackedInline):
 
 class EventAdmin(JobUnitAdmin):
     inlines = (EventTranslationInline, EventPartInline,)
-    list_display = ['__unicode__', 'get_participant_count']
+    list_display = ['__unicode__', 'active', 'get_participant_count']
     collection_selection_form_extra_fields = {
         'attended': forms.BooleanField(required=False),
         'confirmed': forms.BooleanField(required=False),
@@ -79,14 +79,14 @@ class GroupAdmin(JobUnitAdmin):
     )
     form = forms_admin.GroupAdminForm
 
-class AttendanceInline(admin.StackedInline):
+class AttendanceInline(admin.TabularInline):
     model = Attendance
     extra = 0
-    # readonly_fields = ('signup_date',)
+    readonly_fields = ('date_registred',)
                 
 class ParticipantAdmin(admin.ModelAdmin):
     list_display = ('firstname', 'surname', 'email', 'language',)
-    list_filter   = ('language', 'events',)
+    list_filter   = ('language', 'event_parts',)
     readonly_fields = ('invitee',)
     inlines = (AttendanceInline,)
 
