@@ -16,6 +16,7 @@ class GetEventPartsNode(template.Node):
         event = context['group_object']
         event_parts = person.event_parts.filter(event=event)
         context[self.variable_name] = event_parts
+        return u''
 
 def get_subscribed_event_parts(parser, token):
     args = token.split_contents()

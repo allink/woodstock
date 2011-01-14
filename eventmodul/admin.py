@@ -91,9 +91,8 @@ class ParticipantAdmin(admin.ModelAdmin):
     inlines = (AttendanceInline,)
 
 class InviteeAdmin(admin.ModelAdmin):
-    list_display = ('firstname', 'surname', 'email', 'language', 'done',)
-    list_filter   = ('language', 'groups', 'done',)
-    readonly_fields = ('done',)
+    list_display = ('firstname', 'surname', 'email', 'language',)
+    list_filter   = ('language', 'groups',)
     
 
 admin.site.register(Event, EventAdmin)

@@ -1,8 +1,10 @@
 from django.conf import settings
+from django.contrib.auth import login as auth_login, authenticate
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.contrib.sites.models import Site
 from django.core.urlresolvers import reverse
+from django.core import exceptions
 from django.db import models
 from django.db.models import Q
 from django.utils import translation
@@ -11,6 +13,8 @@ from django.template import loader, Context, Template
 
 from pennyblack.options import NewsletterReceiverMixin, JobUnitMixin
 
+from eventmodul import settings
+
 from feincms.module.medialibrary.models import MediaFile
 from feincms.translations import TranslatedObjectMixin, Translation, \
     TranslatedObjectManager
@@ -18,6 +22,17 @@ from feincms.translations import TranslatedObjectMixin, Translation, \
 import datetime
 import random
 import sys
+
+class ExtendableMixin(object):
+    @classmethod
+    def register_extension(cls, register_fn):
+        """
+        Call the register function of an extension. You must override this
+        if you provide a custom ModelAdmin class and want your extensions to
+        be able to patch stuff in.
+        """
+        register_fn(cls, None)
+    
 
 class EventManager(models.Manager):
     def active(self):
@@ -147,9 +162,16 @@ class Person(models.Model, NewsletterReceiverMixin):
     firstname = models.CharField(verbose_name=_('Firstname'), max_length=100)
     surname = models.CharField(verbose_name=_('Surname'), max_length=100)
     email = models.EmailField(verbose_name=_('E-Mail'))
+    password = models.CharField(verbose_name=_('Password'),max_length=100)
+    is_active = models.BooleanField(verbose_name=_('Active'), default=False)
+    last_login = models.DateTimeField(_('last login'), default=datetime.datetime.now)
     language = models.CharField(max_length=5, choices=settings.LANGUAGES, 
         default=settings.LANGUAGE_CODE, blank=True)    
     
+    # used for authentication
+    is_staff = False
+    is_superuser = False
+
     class Meta:
         abstract = True
 
@@ -159,17 +181,33 @@ class Person(models.Model, NewsletterReceiverMixin):
     def full_name(self):
         """Creates a full name"""
         return "%s %s" % (self.surname, self.firstname)
+            
+    def check_password(self, raw_password):
+        if len(self.password) < 4:
+            return False
+        return raw_password == self.password
     
-    def is_male(self):
-        return self.salutation==1
+    def set_password(self, password):
+        self.password = password
+        self.save()
 
+    def is_authenticated(self):
+        """
+        Always return True. This is a way to tell if the user has been
+        authenticated in templates.
+        """
+        return True
 
+    def on_landing(self, request):
+        user = authenticate(user=self)
+        if user:
+            auth_login(request, user)
 class Participant(Person):
     
     event_parts = models.ManyToManyField('EventPart', related_name="participants",
         blank=True, through="Attendance")
     invitee = models.ForeignKey('Invitee', blank=True, null=True,
-        default=None)
+        default=None, related_name="participants")
     
     class Meta:
         ordering = ('surname',)
@@ -177,6 +215,11 @@ class Participant(Person):
         verbose_name_plural = 'Participants'
     
     def attend_events(self, event_parts):
+        """
+        tries to attend all parts in event_parts
+        """
+        if settings.SUBSCRIPTION_CONSUMES_INVITATION and self.attendances.count():
+            raise exceptions.PermissionDenied("You can only attend one event.")
         attendances = []
         success = True
         events = []
@@ -195,6 +238,11 @@ class Participant(Person):
                 attendance.save()
         return success
     
+    def save(self, *args, **kwargs):
+        if settings.SUBSCRIPTION_NEEDS_INVITATION and self.invitee is None:
+            raise exceptions.PermissionDenied("Only invited Persons can register.")
+        super(Participant,self).save(*args, **kwargs)
+        
 
 class Attendance(models.Model):
     participant = models.ForeignKey('Participant', related_name='attendances')
@@ -208,7 +256,8 @@ class Attendance(models.Model):
 
 class Invitee(Person):
     groups = models.ManyToManyField(Group, related_name="customers", blank=True)
-    done = models.BooleanField(default=False)
 
     class Meta:
+        verbose_name = 'Einladung'
+        verbose_name_plural = 'Einladungen'
         ordering = ('surname',)
