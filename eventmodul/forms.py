@@ -1,4 +1,4 @@
-from eventmodul.models import Participant
+from eventmodul.models import Participant, Salutation
 from eventmodul import settings
 
 from pennyblack import send_newsletter    
@@ -6,13 +6,6 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 
 class ParticipantForm(forms.ModelForm):
-
-    # salutation = forms.TypedChoiceField(label=_('Salutation'),
-    #     coerce=int,
-    #     choices=((2, _('Mrs.')), (1, _('Mr.'))),
-    #     widget=forms.RadioSelect
-    # )
-
     class Meta:
         model = Participant
         fields = ('salutation', 'title', 'firstname', 'surname', 'email')
@@ -42,4 +35,31 @@ class LostPasswordForm(forms.Form):
         """
         for user in self.users_cache:
             send_newsletter(settings.LOST_PASSWORD_NEWSLETTER,user)
-            
+
+class RegisterForm(forms.ModelForm):
+    password1 = forms.CharField(label=_("Password"), widget=forms.PasswordInput)
+    password2 = forms.CharField(label=_("Password confirmation"), widget=forms.PasswordInput)
+    salutation = forms.ModelChoiceField(queryset= Salutation.objects.localized(),
+        label=_('Salutation'), empty_label=None, widget=forms.RadioSelect)
+
+    class Meta:
+        model = Participant
+        exclude = ('last_login', 'language', 'is_active', 'invitee', 'password', 'event_parts')
+        
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1", "")
+        password2 = self.cleaned_data["password2"]
+        if password1 != password2:
+            raise forms.ValidationError(_("The two password fields didn't match."))
+        return password2
+
+    def save(self, commit=True):
+        participant = super(RegisterForm, self).save(commit=False)
+        participant.set_password(self.cleaned_data["password1"])
+        print settings.SUBSCRIPTION_NEEDS_ACTIVATION
+        participant.is_active = not settings.SUBSCRIPTION_NEEDS_ACTIVATION
+        if commit:
+            participant.save()
+        if not participant.is_active:
+            send_newsletter(settings.ACTIVATION_NEWSLETTER, participant)
+        return participant

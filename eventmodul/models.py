@@ -155,10 +155,7 @@ class Group(models.Model, JobUnitMixin):
         
 
 class Person(models.Model, NewsletterReceiverMixin):
-    salutation = models.IntegerField(verbose_name=_('Salutation'), 
-        choices=((0,''), (1,_('Mr.')), (2,_('Mrs.'))), default=0)
-    title = models.CharField(verbose_name=_('Title'), max_length=50,
-        blank=True)
+    salutation = models.ForeignKey('Salutation')
     firstname = models.CharField(verbose_name=_('Firstname'), max_length=100)
     surname = models.CharField(verbose_name=_('Surname'), max_length=100)
     email = models.EmailField(verbose_name=_('E-Mail'))
@@ -202,6 +199,7 @@ class Person(models.Model, NewsletterReceiverMixin):
         user = authenticate(user=self)
         if user:
             auth_login(request, user)
+            
 class Participant(Person):
     
     event_parts = models.ManyToManyField('EventPart', related_name="participants",
@@ -242,7 +240,7 @@ class Participant(Person):
         if settings.SUBSCRIPTION_NEEDS_INVITATION and self.invitee is None:
             raise exceptions.PermissionDenied("Only invited Persons can register.")
         super(Participant,self).save(*args, **kwargs)
-        
+            
 
 class Attendance(models.Model):
     participant = models.ForeignKey('Participant', related_name='attendances')
@@ -261,3 +259,25 @@ class Invitee(Person):
         verbose_name = 'Einladung'
         verbose_name_plural = 'Einladungen'
         ordering = ('surname',)
+
+class SalutationManager(models.Manager):
+    def localized(self):
+        """
+        Returns a queryset with all salutations aviable in the current language
+        """
+        return self.filter(language=translation.get_language())
+    
+class Salutation(models.Model):
+    text = models.CharField(max_length=20)
+    gender = models.IntegerField(choices=((0,_('unisex')),(1,_('male')),(2,_('female'))), default=0)
+    language = models.CharField(max_length=6, verbose_name=_('Language'), choices=settings.LANGUAGES)
+    
+    objects = SalutationManager()
+    class Meta:
+        verbose_name = 'Salutation'
+        verbose_name_plural = 'Salutations'
+    
+    def __unicode__(self):
+        return self.text
+    
+    

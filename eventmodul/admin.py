@@ -1,6 +1,6 @@
 from eventmodul import forms_admin
 from eventmodul.models import Event, EventTranslation, EventPart,\
-    Participant, Group, Invitee, Attendance
+    Participant, Group, Invitee, Attendance, Salutation
 
 from django.conf import settings
 from django.contrib import admin
@@ -94,8 +94,11 @@ class InviteeAdmin(admin.ModelAdmin):
     list_display = ('firstname', 'surname', 'email', 'language',)
     list_filter   = ('language', 'groups',)
     
-
+class SalutationAdmin(admin.ModelAdmin):
+    list_display = ('__unicode__', 'gender')
+    
 admin.site.register(Event, EventAdmin)
 admin.site.register(Participant, ParticipantAdmin)
 admin.site.register(Group,GroupAdmin)
 admin.site.register(Invitee, InviteeAdmin)
+admin.site.register(Salutation, SalutationAdmin)
