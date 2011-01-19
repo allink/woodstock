@@ -8,7 +8,7 @@ def invitation_required(function=None, redirect_field_name=REDIRECT_FIELD_NAME):
     Decorator for views that checks that the user is an invitee.
     """
     actual_decorator = user_passes_test(
-        lambda u: isinstance(u,Invitee),
+        lambda u: isinstance(u,Invitee) and u.is_active,
         redirect_field_name=redirect_field_name
     )
     if function:
@@ -20,7 +20,7 @@ def registration_required(function=None, redirect_field_name=REDIRECT_FIELD_NAME
     Decorator for views that checks that the user is an invitee.
     """
     actual_decorator = user_passes_test(
-        lambda u: isinstance(u,Participant),
+        lambda u: isinstance(u,Participant) and u.is_active,
         redirect_field_name=redirect_field_name
     )
     if function:

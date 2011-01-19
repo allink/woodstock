@@ -24,13 +24,13 @@ def index(request):
 index_invitation_required = invitation_required(index)
 index_registration_required = registration_required(index)
 
-    
 
-def detail(request, object_id):
+def detail(request, slug):
+    event = Event.objects.get_by_slug(slug)
     return render_to_response(
         'eventmodul/simple/detail.html',
         {
-            'event': Event.objects.active().get(id=object_id)
+            'event': event,
         },
         context_instance = RequestContext(request),
     )
@@ -39,11 +39,11 @@ detail_invitation_required = invitation_required(detail)
 detail_registration_required = registration_required(detail)
 
 @csrf_protect
-def signup(request, object_id):
+def signup(request, slug):
     """
     Signup view with all possible parts of an event listed and selectable
     """
-    event = Event.objects.active().get(id=object_id)
+    event = Event.objects.get_by_slug(slug)
     if request.method == 'POST':
         p = Participant(language=translation.get_language())
         form = ParticipantForm(request.POST, instance=p, event_parts_queryset=event.parts.active())

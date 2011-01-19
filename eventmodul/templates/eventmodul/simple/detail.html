@@ -5,4 +5,4 @@
         <li>{{part.name}} - {{part.date}}
     {% endfor %}
 </ul>
-<a href="{% url event_signup event.id %}">{% trans "Sign up" %} »</a>
+<a href="{% url event_signup event.slug %}">{% trans "Sign up" %} »</a>

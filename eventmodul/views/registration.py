@@ -38,4 +38,14 @@ def set_new_password(request, set_password_form=SetPasswordForm):
     context = {'form':form}
     context.update(csrf(request))
     return render_to_response(template_name, context)
+
+def activate(request):
+    """
+    Activates a participant
+    """
+    if not isinstance(request.user, Participant):
+        return HttpResponseRedirect('/')
+    request.user.activate()
+    return render_to_response('eventmodul/registration/activation_completed.html',
+        {'user':request.user})
     
