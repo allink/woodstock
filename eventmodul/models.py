@@ -61,7 +61,8 @@ class EventPartManager(models.Manager):
 class EventPart(models.Model):
     event = models.ForeignKey('Event', related_name="parts")
     name = models.CharField(max_length=100)
-    date = models.DateTimeField()
+    date_start = models.DateTimeField()
+    date_end = models.DateTimeField()
     signable = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
     maximum_participants = models.IntegerField(default=0,
@@ -71,25 +72,31 @@ class EventPart(models.Model):
     objects = EventPartManager()
 
     class Meta:
-        ordering = ('date',)
+        ordering = ('date_start',)
         verbose_name = "Event Part"
         verbose_name_plural = "Event Parts"
-
+        
     def __unicode__(self):
-        return "%s %s" % (self.event, self.name)
+        return self.name
+
+    def __repr__(self):
+        return "<%s %s>" % (self.event, self.name)
+
+    def save(self, *args, **kwargs):
+        super(EventPart,self).save(*args,**kwargs)
+        self.event.update_dates()
 
     def fully_booked(self):
         """Returns true if event is already fully booked"""
-        if self.maximum_participants == 0:
-            return False
-        return self.get_participant_count() >= self.maximum_participants
+        return self.maximum_participants and self.get_participant_count() >= self.maximum_participants
 
     def get_participant_count(self):
         return self.participants.count()
     get_participant_count.short_description = "Participants"
-
+    
 class EventPartInline(admin.TabularInline):
     model = EventPart
+    readonly_fields = ('get_participant_count',)
     extra = 0
 
 #-----------------------------------------------------------------------------
@@ -109,17 +116,42 @@ class EventManager(models.Manager, ExtendableMixin):
         if not active:
             return self.get(slug=slug)
         return self.active().get(slug=slug)
-
+    
+    def pending(self):
+        """
+        Gives all events which ar not already passed.
+        """
+        return self.active().filter(date_end__lt=datetime.now())
+        
 class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
     active = models.BooleanField(default=False)
     slug = models.SlugField(unique=True)
+    date_start = models.DateTimeField(null=True)
+    date_end = models.DateTimeField(null=True)
     
     objects = EventManager()
     class Meta:
-        # ordering = ('parts__date',)
+        ordering = ('date_start',)
         verbose_name = "Event"
         verbose_name_plural = "Events"
-            
+        
+    def __unicode__(self):
+        try:
+            return self.translation.name
+        except exceptions.ObjectDoesNotExist:
+            return 'no name'
+        
+    def update_dates(self):
+        first_part = self.parts.active().order_by('date_start')[0]
+        self.date_start = first_part.date_start
+        last_part = self.parts.active().order_by('-date_start')[0]
+        self.date_end = last_part.date_end
+        self.save()
+    
+    @property
+    def participant_count(self):
+        return self.parts.active().aggregate(models.Count('participants__id'))['participants__id__count']
+    
     def get_participant_count(self):
         count = 0
         for event_part in self.parts.all():
@@ -127,10 +159,21 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
         return count
     get_participant_count.short_description = "Participants"
 
+    @property
+    def available_places(self):
+        return self. max_participants - self.participant_count
     
-    def __unicode__(self):
-        return self.translation.name
+    @property
+    def max_participants(self):
+        if self.parts.active().filter(maximum_participants=0).count():
+            return 0
+        else:
+            return self.parts.active().aggregate(models.Sum('maximum_participants'))['maximum_participants__sum']
     
+    def get_max_participants(self):
+        return self.max_participants or 'Unlimitiert'
+    get_max_participants.short_description = "Maximum Participants"
+        
     # newsletter functions
     def get_newsletter_receiver_collections(self):
         collections = tuple()
@@ -165,6 +208,7 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
     def register_extension(cls, register_fn):
         register_fn(cls, EventAdmin, EventTranslation, EventTranslationInline, EventPart, EventPartInline)
 
+
 class EventTranslation(Translation(Event)):
     name = models.CharField(max_length=100)
     subscribe_mail = models.ForeignKey('pennyblack.Newsletter', blank=True,
@@ -178,7 +222,8 @@ class EventTranslationInline(admin.StackedInline):
 
 class EventAdmin(JobUnitAdmin):
     inlines = (EventTranslationInline, EventPartInline,)
-    list_display = ('__unicode__', 'active', 'get_participant_count')
+    list_display = ('__unicode__', 'active', 'get_participant_count', 'get_max_participants')
+    readonly_fields = ('date_start', 'date_end')
     collection_selection_form_extra_fields = {
         'attended': forms.BooleanField(required=False),
         'confirmed': forms.BooleanField(required=False),
