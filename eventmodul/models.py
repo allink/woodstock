@@ -78,10 +78,7 @@ class EventPart(models.Model):
     
     def __unicode__(self):
         return self.name
-    
-    def __repr__(self):
-        return "<%s %s>" % (self.event, self.name)
-    
+        
     def save(self, *args, **kwargs):
         super(EventPart,self).save(*args,**kwargs)
         self.event.update_dates()
@@ -379,6 +376,17 @@ class Person(models.Model, NewsletterReceiverMixin, ExtendableMixin):
 #-----------------------------------------------------------------------------
 # Attendance
 #-----------------------------------------------------------------------------
+class AttendanceManager(models.Manager):
+    use_for_related_fields = True
+    def confirmed(self):
+        return self.filter(confirmed=True)
+    
+    def unconfirmed(self):
+        return self.filter(confirmed=False)
+
+    def attended(self):
+        return self.filter(attended=True)
+
 class Attendance(models.Model):
     participant = models.ForeignKey('Participant', related_name='attendances')
     event_part = models.ForeignKey('EventPart', related_name='attendances')
@@ -404,7 +412,7 @@ class Participant(Person):
         blank=True, through="Attendance")
     invitee = models.ForeignKey('Invitee', blank=True, null=True,
         default=None, related_name="participants")
-    
+        
     class Meta:
         ordering = ('surname',)
         verbose_name = 'Participants'
@@ -416,6 +424,15 @@ class Participant(Person):
         """
         if settings.SUBSCRIPTION_CONSUMES_INVITATION and self.attendances.count():
             raise exceptions.PermissionDenied("You can only attend one event.")
+        if not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTS or not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS:
+            events = Event.objects.active().filter(
+                models.Q(parts__attendances__confirmed=True,parts__attendances__participant=self)
+                | models.Q(parts__in=event_parts)
+                )
+            if not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTS and events.distinct().count() > 1:
+                raise exceptions.PermissionDenied("You can only attend one event.")
+            if not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS and events.distinct().count() != events.count():
+                raise exceptions.PermissionDenied("You can only attend one eventpart per event.")            
         attendances = []
         success = True
         events = []
@@ -428,11 +445,18 @@ class Participant(Person):
         if success:
             for event in events:
                 event.send_subscribe_mail(self)
+            # callback functions
+            for callback in self.callback_functions:
+                if callback['event_attend']:
+                    callback['fn'](self,attendances)
         else:
             for attendance in attendances:
                 attendance.confirmed = False
                 attendance.save()
         return success
+
+    def cancel_events(self, event_parts):
+        pass
     
     def save(self, *args, **kwargs):
         if settings.SUBSCRIPTION_NEEDS_INVITATION and self.invitee is None:
@@ -442,6 +466,13 @@ class Participant(Person):
     @classmethod
     def register_extension(cls, register_fn):
         register_fn(cls, ParticipantAdmin)
+    
+    callback_functions = [] # empty array
+    
+    @classmethod
+    def register_callback(cls, callback_fn, event_attend=False, event_cancel=False):
+        cls.callback_functions.append({'fn':callback_fn, 'event_attend':event_attend, 'event_cancel':event_cancel})
+        
 
 class ParticipantAdmin(admin.ModelAdmin):
     list_display = ('firstname', 'surname', 'email', 'language',)
