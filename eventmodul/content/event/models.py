@@ -9,7 +9,7 @@ class NextEventsContent(models.Model):
         abstract = True
         verbose_name = 'Next Events Content'
         verbose_name_plural = 'Next Events Contents'
-        
+    
     def render(self, **kwargs):
         events = Event.objects.pending()[self.count:]
         return render_to_string('content/eventmodul/next_events.html',{'events':events})

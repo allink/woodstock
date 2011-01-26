@@ -3,7 +3,7 @@ from eventmodul.models import Event, EventAdmin,\
     Salutation, SalutationAdmin
 
 from django.contrib import admin
-    
+
 admin.site.register(Event, EventAdmin)
 admin.site.register(Participant, ParticipantAdmin)
 admin.site.register(Group,GroupAdmin)

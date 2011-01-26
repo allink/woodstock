@@ -20,7 +20,7 @@ def index(request):
         },
         context_instance = RequestContext(request),
     )
-    
+
 index_invitation_required = invitation_required(index)
 index_registration_required = registration_required(index)
 

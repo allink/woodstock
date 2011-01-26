@@ -17,13 +17,13 @@ class PersonBackend(object):
                 return user
         except ObjectDoesNotExist:
             return None
-
+    
     def get_user(self, user_id):
         try:
             return self.model.objects.get(pk=user_id)
         except ObjectDoesNotExist:
             return None
-            
+
 class InviteeBackend(PersonBackend):
     """
     Authenticates against eventmodul.models.Invitee.
