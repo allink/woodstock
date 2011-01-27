@@ -37,7 +37,7 @@ def set_new_password(request, set_password_form=SetPasswordForm):
         form = set_password_form(None)
     context = {'form':form}
     context.update(csrf(request))
-    return render_to_response(template_name, context)
+    return render_to_response(template_name, context,context_instance = RequestContext(request))
 
 def activate(request):
     """
@@ -47,5 +47,5 @@ def activate(request):
         return HttpResponseRedirect('/')
     request.user.activate()
     return render_to_response('eventmodul/registration/activation_completed.html',
-        {'user':request.user})
+        {'user':request.user},context_instance = RequestContext(request))
     
