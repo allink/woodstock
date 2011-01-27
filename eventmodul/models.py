@@ -327,7 +327,7 @@ class Person(models.Model, NewsletterReceiverMixin, ExtendableMixin):
     salutation = models.ForeignKey('Salutation')
     firstname = models.CharField(verbose_name=_('Firstname'), max_length=100)
     surname = models.CharField(verbose_name=_('Surname'), max_length=100)
-    email = models.EmailField(verbose_name=_('E-Mail'))
+    email = models.EmailField(verbose_name=_('E-Mail'), unique=settings.PERSON_EMAIL_UNIQUE)
     password = models.CharField(verbose_name=_('Password'),max_length=100)
     is_active = models.BooleanField(verbose_name=_('Active'), default=False)
     last_login = models.DateTimeField(_('last login'), default=datetime.now)
@@ -407,7 +407,6 @@ class AttendanceInline(admin.TabularInline):
 # Participant
 #-----------------------------------------------------------------------------
 class Participant(Person):
-    
     event_parts = models.ManyToManyField('EventPart', related_name="participants",
         blank=True, through="Attendance")
     invitee = models.ForeignKey('Invitee', blank=True, null=True,
@@ -415,7 +414,7 @@ class Participant(Person):
         
     class Meta:
         ordering = ('surname',)
-        verbose_name = 'Participants'
+        verbose_name = 'Participant'
         verbose_name_plural = 'Participants'
     
     def attend_events(self, event_parts):
