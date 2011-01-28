@@ -1,4 +1,4 @@
-from eventmodul.models import Event, EventAdmin,\
+from woodstock.models import Event, EventAdmin,\
     Participant, ParticipantAdmin, Invitee, InviteeAdmin, Group, GroupAdmin,\
     Salutation, SalutationAdmin
 

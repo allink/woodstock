@@ -12,4 +12,4 @@ class NextEventsContent(models.Model):
     
     def render(self, **kwargs):
         events = Event.objects.pending()[self.count:]
-        return render_to_string('content/eventmodul/next_events.html',{'events':events})
+        return render_to_string('content/woodstock/next_events.html',{'events':events})

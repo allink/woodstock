@@ -7,8 +7,8 @@ Replace these with more appropriate tests for your application.
 
 from django.core import exceptions
 from django.test import TestCase
-from eventmodul.models import Event, EventPart, Participant, Salutation
-from eventmodul import settings
+from woodstock.models import Event, EventPart, Participant, Salutation
+from woodstock import settings
 
 import datetime
 

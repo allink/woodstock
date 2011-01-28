@@ -6,7 +6,7 @@ from django.utils.functional import LazyObject
 
 class LazySettings(LazyObject):
     def _setup(self):
-        from eventmodul import default_settings
+        from woodstock import default_settings
         self._wrapped = Settings(default_settings)
 
 class Settings(object):

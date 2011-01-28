@@ -1,6 +1,6 @@
-from eventmodul.models import Event, EventPart, Participant
-from eventmodul.forms import ParticipantForm
-from eventmodul.views.decorators import registration_required, \
+from woodstock.models import Event, EventPart, Participant
+from woodstock.forms import ParticipantForm
+from woodstock.views.decorators import registration_required, \
     invitation_required
 
 from feincms.content.application.models import reverse
@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_protect
 
 def index(request):
     return render_to_response(
-        'eventmodul/simple/index.html',
+        'woodstock/simple/index.html',
         {
             'events': Event.objects.active(),
         },
@@ -28,7 +28,7 @@ index_registration_required = registration_required(index)
 def detail(request, slug):
     event = Event.objects.get_by_slug(slug)
     return render_to_response(
-        'eventmodul/simple/detail.html',
+        'woodstock/simple/detail.html',
         {
             'event': event,
         },
@@ -59,7 +59,7 @@ def signup(request, slug):
     context = {'form': form, 'event': event}
     context.update(csrf(request))
     return render_to_response(
-        'eventmodul/simple/signup.html',
+        'woodstock/simple/signup.html',
         context,
         context_instance = RequestContext(request),
     )

@@ -18,7 +18,7 @@ from django.template.defaultfilters import slugify
 from pennyblack.options import NewsletterReceiverMixin, JobUnitMixin, \
     JobUnitAdmin
 
-from eventmodul import settings
+from woodstock import settings
 
 from feincms.module.medialibrary.models import MediaFile
 from feincms.translations import TranslatedObjectMixin, Translation, \

@@ -1,0 +1,1 @@
+[{"pk": 1, "model": "woodstock.salutation", "fields": {"text": "Herr", "language": "de", "gender": 1}}, {"pk": 2, "model": "woodstock.salutation", "fields": {"text": "Frau", "language": "de", "gender": 2}}]

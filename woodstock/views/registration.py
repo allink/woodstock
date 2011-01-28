@@ -1,5 +1,5 @@
-from eventmodul.models import Participant
-from eventmodul.views.decorators import registration_required, \
+from woodstock.models import Participant
+from woodstock.views.decorators import registration_required, \
     invitation_required
 
 from feincms.content.application.models import reverse
@@ -46,6 +46,6 @@ def activate(request):
     if not isinstance(request.user, Participant):
         return HttpResponseRedirect('/')
     request.user.activate()
-    return render_to_response('eventmodul/registration/activation_completed.html',
+    return render_to_response('woodstock/registration/activation_completed.html',
         {'user':request.user},context_instance = RequestContext(request))
     

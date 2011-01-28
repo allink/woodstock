@@ -1,5 +1,5 @@
-from eventmodul.models import Participant, Salutation
-from eventmodul import settings
+from woodstock.models import Participant, Salutation
+from woodstock import settings
 
 from pennyblack import send_newsletter    
 from django import forms

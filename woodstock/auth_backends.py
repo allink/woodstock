@@ -1,5 +1,5 @@
-from eventmodul.models import Invitee, Participant
-from eventmodul import settings
+from woodstock.models import Invitee, Participant
+from woodstock import settings
 from django.core.exceptions import ObjectDoesNotExist
 
 class PersonBackend(object):
@@ -26,12 +26,12 @@ class PersonBackend(object):
 
 class InviteeBackend(PersonBackend):
     """
-    Authenticates against eventmodul.models.Invitee.
+    Authenticates against woodstock.models.Invitee.
     """
     model = Invitee
 
 class ParticipantBackend(PersonBackend):
     """
-    Authenticates against eventmodul.models.Participant.
+    Authenticates against woodstock.models.Participant.
     """
     model = Participant
