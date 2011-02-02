@@ -28,6 +28,7 @@ import random
 import sys
 import csv
 from datetime import datetime
+from decorator import decorator
 
 try:
     import xlwt
@@ -58,6 +59,8 @@ class EventPartManager(models.Manager):
         """
         return self.filter(active=True)
 
+event_part_manager = EventPartManager()
+
 class EventPart(models.Model):
     event = models.ForeignKey('Event', related_name="parts")
     name = models.CharField(max_length=100)
@@ -69,7 +72,8 @@ class EventPart(models.Model):
         verbose_name="Maximum Participants",
         help_text="Number of maximum participants or 0 for no limit.")
     
-    objects = EventPartManager()
+    default_manager = event_part_manager
+    objects = event_part_manager
     
     class Meta:
         ordering = ('date_start',)
@@ -119,6 +123,12 @@ class EventManager(models.Manager, ExtendableMixin):
         Gives all events which ar not already passed.
         """
         return self.active().filter(date_end__lt=datetime.now())
+    
+    def for_attendances(self, attendances):
+        """
+        Gives all events for a list of attendances.
+        """
+        return self.filter(parts__attendances__in=attendances).distinct()
 
 class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
     active = models.BooleanField(default=False)
@@ -187,8 +197,6 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
         q = Q()
         for collection in collections:
             q |= Q(events__pk=int(collection))
-            print Participant.objects.filter(events__pk=int(collection))
-        print Participant.objects.filter(q)
         return Participant.objects.filter(q)
     
     def send_subscribe_mail(self, participant):
@@ -378,6 +386,7 @@ class Person(models.Model, NewsletterReceiverMixin, ExtendableMixin):
 #-----------------------------------------------------------------------------
 class AttendanceManager(models.Manager):
     use_for_related_fields = True
+        
     def confirmed(self):
         return self.filter(confirmed=True)
     
@@ -386,6 +395,14 @@ class AttendanceManager(models.Manager):
 
     def attended(self):
         return self.filter(attended=True)
+    
+    def pending(self):
+        """
+        All attendances in the future
+        """
+        return self.filter(event_part__date_start__gt=datetime.now())
+
+attendance_manager = AttendanceManager()
 
 class Attendance(models.Model):
     participant = models.ForeignKey('Participant', related_name='attendances')
@@ -393,6 +410,9 @@ class Attendance(models.Model):
     confirmed = models.BooleanField(default=False)
     attended = models.BooleanField(default=True)
     date_registred = models.DateTimeField(default=datetime.now(), verbose_name="Signup Date")
+    
+    default_manager = attendance_manager
+    objects = attendance_manager
     
     def __unicode__(self):
         return '%s is attending %s' % (self.participant, self.event_part)
@@ -406,6 +426,18 @@ class AttendanceInline(admin.TabularInline):
 #-----------------------------------------------------------------------------
 # Participant
 #-----------------------------------------------------------------------------
+# callback decorator
+def callback(what):
+    def callback_decorator(function, self, *args, **kwargs):
+        attendances = function(self, *args, **kwargs)
+        if attendances:
+            for callback in self.callback_functions:
+                if what in callback['events']:
+                    callback['fn'](self,attendances)
+        return attendances
+    return decorator(callback_decorator)
+
+
 class Participant(Person):
     event_parts = models.ManyToManyField('EventPart', related_name="participants",
         blank=True, through="Attendance")
@@ -417,6 +449,25 @@ class Participant(Person):
         verbose_name = 'Participant'
         verbose_name_plural = 'Participants'
     
+    def _attend_events(self, event_parts):
+        """
+        Attend events without callback and other functianlity.
+        """
+        attendances = []
+        success = True
+        for part in event_parts:
+            success &= not part.fully_booked()
+            attendances.append(Attendance.objects.create(participant=self,
+                event_part=part, confirmed=True))
+        if success:
+            return attendances
+        # remove confirmation if something didn't went well
+        for attendance in attendances:
+            attendance.confirmed = False
+            attendance.save()
+        return False
+        
+    @callback('attend_events')
     def attend_events(self, event_parts):
         """
         tries to attend all parts in event_parts
@@ -431,31 +482,55 @@ class Participant(Person):
             if not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTS and events.distinct().count() > 1:
                 raise exceptions.PermissionDenied("You can only attend one event.")
             if not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS and events.distinct().count() != events.count():
-                raise exceptions.PermissionDenied("You can only attend one eventpart per event.")            
-        attendances = []
-        success = True
-        events = []
-        for part in event_parts:
-            success &= not part.fully_booked()
-            attendances.append(Attendance.objects.create(participant=self,
-                event_part=part, confirmed=True))
-            if part.event not in events:
-                events.append(part.event)
-        if success:
-            for event in events:
-                event.send_subscribe_mail(self)
-            # callback functions
-            for callback in self.callback_functions:
-                if callback['event_attend']:
-                    callback['fn'](self,attendances)
-        else:
-            for attendance in attendances:
-                attendance.confirmed = False
-                attendance.save()
-        return success
+                raise exceptions.PermissionDenied("You can only attend one eventpart per event.")
+        attendances = self._attend_events(event_parts)
+        if not attendances:
+            return False
+        # send emails
+        for event in Event.objects.for_attendances(attendances):
+            event.send_subscribe_mail(self)
+        return attendances
 
-    def cancel_events(self, event_parts):
-        pass
+    def _cancel_events(self, event_parts, delete=True):
+        """
+        Cancels event attendances
+        """
+        if event_parts:
+            queryset = self.attendances.filter(event_part__in=event_parts)
+        else:
+            queryset = self.attendances.all()
+        attendances = []
+        for attendance in queryset:
+            attendances.append(attendance)
+            if delete:
+                attendance.delete()
+        return attendances
+    
+    @callback('cancel_events')
+    def cancel_events(self, event_parts=None):
+        """
+        Cancels all event attendances to events in event_parts. If event_parts
+        is omited all attendances are cancled.
+        """
+        return self._cancel_events(event_parts)
+        
+    @callback('change_events')
+    def change_events(self, new_event_parts, old_event_parts=None):
+        """
+        Changes event attendances. If old_event_parts is omited all current
+        attendances are deleted.
+        """
+        old_attendances = self._cancel_events(old_event_parts, delete=False)
+        attendances = self._attend_events(new_event_parts)
+        if not attendances:
+            return False
+        for attendance in old_attendances:
+            attendance.delete()
+        # send emails
+        for event in Event.objects.for_attendances(attendances):
+            event.send_subscribe_mail(self)
+        return attendances
+        
     
     def save(self, *args, **kwargs):
         if settings.SUBSCRIPTION_NEEDS_INVITATION and self.invitee is None:
@@ -469,8 +544,8 @@ class Participant(Person):
     callback_functions = [] # empty array
     
     @classmethod
-    def register_callback(cls, callback_fn, event_attend=False, event_cancel=False):
-        cls.callback_functions.append({'fn':callback_fn, 'event_attend':event_attend, 'event_cancel':event_cancel})
+    def register_callback(cls, callback_fn, events):
+        cls.callback_functions.append({'fn':callback_fn, 'events':events})
         
 
 class ParticipantAdmin(admin.ModelAdmin):
