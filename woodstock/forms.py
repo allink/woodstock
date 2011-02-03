@@ -56,7 +56,6 @@ class RegisterForm(forms.ModelForm):
     def save(self, commit=True):
         participant = super(RegisterForm, self).save(commit=False)
         participant.set_password(self.cleaned_data["password1"])
-        print settings.SUBSCRIPTION_NEEDS_ACTIVATION
         participant.is_active = not settings.SUBSCRIPTION_NEEDS_ACTIVATION
         if commit:
             participant.save()
