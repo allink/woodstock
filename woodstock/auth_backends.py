@@ -11,10 +11,13 @@ class PersonBackend(object):
         if user:
             return user
         try:
-            get_filter = {settings.USERNAME_FIELD:username}
-            user = self.model.objects.get(**get_filter)
-            if user.check_password(password):
-                return user
+            if settings.USERNAME_FIELD:
+                get_filter = {settings.USERNAME_FIELD:username}
+                user = self.model.objects.get(**get_filter)
+                if user.check_password(password):
+                    return user
+            else:
+                return self.model.objects.get(password=password)
         except ObjectDoesNotExist:
             return None
     

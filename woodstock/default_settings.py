@@ -13,6 +13,7 @@ SUBSCRIPTION_NEEDS_ACTIVATION = getattr(settings, 'WOODSTOCK_SUBSCRIPTION_NEEDS_
 
 OVERBOOKING_ALLOWED = getattr(settings, 'WOODSTOCK_OVERBOOKING_ALLOWED', False)
 
+# if set to None only password will be used
 USERNAME_FIELD = getattr(settings, 'WOODSTOCK_USERNAME_FIELD', 'email')
 
 PERSON_EMAIL_UNIQUE = getattr(settings, 'WOODSTOCK_PARTICIPANT_EMAIL_UNIQUE', True)
