@@ -3,6 +3,7 @@ from woodstock import settings
 
 from pennyblack import send_newsletter    
 from django import forms
+from django.contrib.auth import authenticate
 from django.utils.translation import ugettext_lazy as _
 
 class ParticipantForm(forms.ModelForm):
