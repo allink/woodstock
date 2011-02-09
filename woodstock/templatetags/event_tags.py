@@ -15,7 +15,7 @@ class GetEventPartsNode(template.Node):
             return u''
         person = context['person']
         event = context['group_object']
-        event_parts = EventPart.filter(event=event).filter(attendances__participant=person)
+        event_parts = EventPart.objects.filter(event=event).filter(attendances__participant=person)
         context[self.variable_name] = event_parts
         return u''
 
