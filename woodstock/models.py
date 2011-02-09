@@ -357,8 +357,6 @@ class Person(models.Model, NewsletterReceiverMixin, ExtendableMixin):
         return "%s %s" % (self.surname, self.firstname)
     
     def check_password(self, raw_password):
-        if len(self.password) < 4:
-            return False
         return raw_password == self.password
     
     def set_password(self, password):
