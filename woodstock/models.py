@@ -354,7 +354,7 @@ class Person(models.Model, NewsletterReceiverMixin, ExtendableMixin):
     
     def full_name(self):
         """Creates a full name"""
-        return "%s %s" % (self.surname, self.firstname)
+        return u"%s %s" % (self.surname, self.firstname)
     
     def check_password(self, raw_password):
         return raw_password == self.password
@@ -413,7 +413,7 @@ class Attendance(models.Model):
     objects = attendance_manager
     
     def __unicode__(self):
-        return '%s is attending %s' % (self.participant, self.event_part)
+        return u'%s is attending %s' % (self.participant, self.event_part)
 
 class AttendanceInline(admin.TabularInline):
     model = Attendance
