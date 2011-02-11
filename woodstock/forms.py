@@ -1,7 +1,7 @@
 from woodstock.models import Participant, Salutation
 from woodstock import settings
 
-from pennyblack import send_newsletter    
+from pennyblack import send_newsletter   
 from django import forms
 from django.contrib.auth import authenticate
 from django.utils.translation import ugettext_lazy as _
@@ -46,6 +46,12 @@ class RegisterForm(forms.ModelForm):
     class Meta:
         model = Participant
         exclude = ('last_login', 'language', 'is_active', 'invitee', 'password', 'event_parts')
+    
+    def clean_password1(self):
+        password1 = self.cleaned_data["password1"]
+        if len(password1) < settings.PARTICIPANT_MIN_PASSWORD_LENGTH:
+            raise forms.ValidationError(_("The password needs to be %d characters long.") % settings.PARTICIPANT_MIN_PASSWORD_LENGTH)
+        return password1
         
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1", "")
