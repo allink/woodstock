@@ -1,9 +1,12 @@
+# a lot of this code is mostly from django.contrib.auth.forms
+
 from woodstock.models import Participant, Salutation
 from woodstock import settings
 
 from pennyblack import send_newsletter   
 from django import forms
 from django.contrib.auth import authenticate
+from django.contrib.auth.forms import SetPasswordForm as AuthSetPasswordForm
 from django.utils.translation import ugettext_lazy as _
 
 class ParticipantForm(forms.ModelForm):
@@ -36,6 +39,58 @@ class LostPasswordForm(forms.Form):
         """
         for user in self.users_cache:
             send_newsletter(settings.LOST_PASSWORD_NEWSLETTER,user)
+
+class SetPasswordForm(AuthSetPasswordForm):
+    """
+    A form that lets a user change set his/her password without
+    entering the old password
+    """
+    def clean_old_password(self):
+        """
+        Validates that the old_password field is correct.
+        """
+        old_password = self.cleaned_data["old_password"]
+        if not self.user.check_password(old_password):
+            raise forms.ValidationError(_("Your old password was entered incorrectly. Please enter it again."))
+        return old_password
+
+    def clean_password1(self):
+        password1 = self.cleaned_data["new_password1"]
+        if len(password1) < settings.PARTICIPANT_MIN_PASSWORD_LENGTH:
+            raise forms.ValidationError(_("The password needs to be %d characters long.") % settings.PARTICIPANT_MIN_PASSWORD_LENGTH)
+        return password1
+
+    def clean_new_password2(self):
+        password1 = self.cleaned_data.get('new_password1')
+        password2 = self.cleaned_data.get('new_password2')
+        if password1 and password2:
+            if password1 != password2:
+                raise forms.ValidationError(_("The two password fields didn't match."))
+        return password2
+
+    def save(self, commit=True):
+        self.user.set_password(self.cleaned_data['new_password1'])
+        if commit:
+            self.user.save()
+        return self.user
+
+class PasswordChangeForm(SetPasswordForm):
+    """
+    A form that lets a user change his/her password by entering
+    their old password.
+    """
+    old_password = forms.CharField(label=_("Old password"), widget=forms.PasswordInput)
+
+    def clean_old_password(self):
+        """
+        Validates that the old_password field is correct.
+        """
+        old_password = self.cleaned_data["old_password"]
+        if not self.user.check_password(old_password):
+            raise forms.ValidationError(_("Your old password was entered incorrectly. Please enter it again."))
+        return old_password
+PasswordChangeForm.base_fields.keyOrder = ['old_password', 'new_password1', 'new_password2']
+    
 
 class RegisterForm(forms.ModelForm):
     password1 = forms.CharField(label=_("Password"), widget=forms.PasswordInput)
