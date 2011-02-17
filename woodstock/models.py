@@ -122,7 +122,7 @@ class EventManager(models.Manager, ExtendableMixin):
         """
         Gives all events which ar not already passed.
         """
-        return self.active().filter(date_end__lt=datetime.now())
+        return self.active().filter(date_end__gt=datetime.now())
     
     def for_attendances(self, attendances):
         """
