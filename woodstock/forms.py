@@ -10,15 +10,21 @@ from django.contrib.auth.forms import SetPasswordForm as AuthSetPasswordForm
 from django.utils.translation import ugettext_lazy as _
 
 class ParticipantForm(forms.ModelForm):
+    salutation = forms.ModelChoiceField(queryset= Salutation.objects.localized(),
+        label=_('Salutation'), empty_label=None)
+    
     class Meta:
         model = Participant
-        fields = ('salutation', 'title', 'firstname', 'surname', 'email')
+        fields = ('salutation', 'firstname', 'surname', 'email')
 
     def __init__(self, *args, **kwargs):
-        event_parts_queryset = kwargs['event_parts_queryset']
-        del kwargs['event_parts_queryset']
-        super(ParticipantForm,self).__init__(*args, **kwargs)
-        self.fields['event_parts'] = forms.ModelMultipleChoiceField(queryset=event_parts_queryset)
+        if 'event_parts_queryset' in kwargs.keys():
+            event_parts_queryset = kwargs['event_parts_queryset']
+            del kwargs['event_parts_queryset']
+            super(ParticipantForm,self).__init__(*args, **kwargs)
+            self.fields['event_parts'] = forms.ModelMultipleChoiceField(queryset=event_parts_queryset)
+        else:
+            super(ParticipantForm,self).__init__(*args, **kwargs)
     
 class LostPasswordForm(forms.Form):
     email = forms.EmailField(label=_("E-mail"), max_length=75)
