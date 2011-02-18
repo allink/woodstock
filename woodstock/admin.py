@@ -1,6 +1,8 @@
-from woodstock.models import Event, EventAdmin,\
-    Participant, ParticipantAdmin, Invitee, InviteeAdmin, Group, GroupAdmin,\
-    Salutation, SalutationAdmin
+from woodstock.models.event import Event, EventAdmin
+from woodstock.models.group import Group, GroupAdmin
+from woodstock.models.invitee import Invitee, InviteeAdmin
+from woodstock.models.participant import Participant, ParticipantAdmin
+from woodstock.models.salutation import Salutation, SalutationAdmin
 from woodstock import settings
 
 from django.contrib import admin
