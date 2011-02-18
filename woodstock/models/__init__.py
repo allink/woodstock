@@ -62,7 +62,7 @@ class EventPartManager(models.Manager):
 event_part_manager = EventPartManager()
 
 class EventPart(models.Model):
-    event = models.ForeignKey('Event', related_name="parts")
+    event = models.ForeignKey('woodstock.Event', related_name="parts")
     name = models.CharField(max_length=100)
     date_start = models.DateTimeField()
     date_end = models.DateTimeField()
@@ -269,7 +269,7 @@ class EventAdmin(JobUnitAdmin):
 #-----------------------------------------------------------------------------
 class Group(models.Model, JobUnitMixin):
     name = models.CharField(max_length=100)
-    event = models.ForeignKey(Event, null=True, blank=True, default=None,
+    event = models.ForeignKey('woodstock.Event', null=True, blank=True, default=None,
         help_text="Customers will be redirected to this event"
     )
     
@@ -332,7 +332,7 @@ class GroupAdmin(JobUnitAdmin):
 # Person
 #-----------------------------------------------------------------------------
 class Person(models.Model, NewsletterReceiverMixin, ExtendableMixin):
-    salutation = models.ForeignKey('Salutation')
+    salutation = models.ForeignKey('woodstock.Salutation')
     firstname = models.CharField(verbose_name=_('Firstname'), max_length=100)
     surname = models.CharField(verbose_name=_('Surname'), max_length=100)
     email = models.EmailField(verbose_name=_('E-Mail'), unique=settings.PERSON_EMAIL_UNIQUE)
@@ -403,8 +403,8 @@ class AttendanceManager(models.Manager):
 attendance_manager = AttendanceManager()
 
 class Attendance(models.Model):
-    participant = models.ForeignKey('Participant', related_name='attendances')
-    event_part = models.ForeignKey('EventPart', related_name='attendances')
+    participant = models.ForeignKey('woodstock.Participant', related_name='attendances')
+    event_part = models.ForeignKey('woodstock.EventPart', related_name='attendances')
     confirmed = models.BooleanField(default=False)
     attended = models.BooleanField(default=True)
     date_registred = models.DateTimeField(default=datetime.now(), verbose_name="Signup Date")
@@ -439,7 +439,7 @@ def callback(what):
 class Participant(Person):
     event_parts = models.ManyToManyField('EventPart', related_name="participants",
         blank=True, through="Attendance")
-    invitee = models.ForeignKey('Invitee', blank=True, null=True,
+    invitee = models.ForeignKey('woodstock.Invitee', blank=True, null=True,
         default=None, related_name="participants")
         
     class Meta:
@@ -595,4 +595,3 @@ class Salutation(models.Model):
 
 class SalutationAdmin(admin.ModelAdmin):
     list_display = ('__unicode__', 'gender')
-    
