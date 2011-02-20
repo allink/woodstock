@@ -13,14 +13,17 @@ from woodstock.models.person import Person
 #-----------------------------------------------------------------------------
 # callback decorator
 def callback(what):
-    def callback_decorator(function, self, *args, **kwargs):
-        attendances = function(self, *args, **kwargs)
-        if attendances:
-            for callback in self.callback_functions:
-                if what in callback['events']:
-                    callback['fn'](self,attendances)
-        return attendances
-    return wraps(callback_decorator)
+    def actual_decorator(function):
+        @wraps(function)
+        def wrapper(self, *args, **kwargs):
+            attendances = function(self, *args, **kwargs)
+            if attendances:
+                for callback in self.callback_functions:
+                    if what in callback['events']:
+                        callback['fn'](self,attendances)
+            return attendances
+        return wrapper
+    return actual_decorator
 
 
 class Participant(Person):
