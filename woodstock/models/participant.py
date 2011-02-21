@@ -145,5 +145,6 @@ class ParticipantAdmin(admin.ModelAdmin):
     list_display = ('firstname', 'surname', 'email', 'language',)
     list_filter   = ('language', 'event_parts',)
     readonly_fields = ('invitee',)
+    search_fields = ('firstname', 'surname', 'email')
     inlines = (AttendanceInline,)
 

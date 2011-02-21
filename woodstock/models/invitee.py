@@ -18,3 +18,4 @@ class Invitee(Person):
 class InviteeAdmin(admin.ModelAdmin):
     list_display = ('firstname', 'surname', 'email', 'language',)
     list_filter   = ('language', 'groups',)
+    search_fields = ('firstname', 'surname', 'email')
