@@ -4,9 +4,9 @@ from django.db import models
 from django.utils.functional import wraps
 
 from woodstock import settings
-from woodstock.models.attendance import Attendance
-from woodstock.models.event import Event
-from woodstock.models.person import Person
+from woodstock.models import Attendance
+from woodstock.models import Event
+from woodstock.models import Person
 
 #-----------------------------------------------------------------------------
 # Participant

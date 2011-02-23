@@ -45,6 +45,12 @@ class EventPart(models.Model):
         """Returns true if event is already fully booked"""
         return self.maximum_participants and self.get_participant_count() >= self.maximum_participants
     
-    def get_participant_count(self):
-        return self.participants.count()
+    def get_participant_count(self, confirmed_only=True):
+        """
+        Returns the participant count.
+        If confirmed_only is False the overall count is returned.
+        """
+        if confirmed_only:
+            return self.attendances.confirmed().count()
+        return self.attendances.all().count()
     get_participant_count.short_description = "Participants"

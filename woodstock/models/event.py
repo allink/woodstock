@@ -12,8 +12,9 @@ from pennyblack.options import JobUnitMixin, \
     JobUnitAdmin
 
 from woodstock import settings
-from woodstock.models.event_part import EventPart
-from woodstock.models.extendable import ExtendableMixin
+from woodstock.models import EventPart
+from woodstock.models import ExtendableMixin
+from woodstock.models import Participant
 
 import datetime
 try:
@@ -113,19 +114,25 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
     def get_newsletter_receiver_collections(self):
         collections = tuple()
         for part in self.parts.all():
-            collections += ((part.name,'get_newsletter_receivers',
-                {'event_part':part.id}),)
+            collections += ((part.name,{'event_part':part.id}),)
         return collections
-    
-    def get_newsletter_receivers(self, event_part_id=None):
-        if event_part_id:
-            return self.parts.get(id=event_part_id).participants.all()
-    
+        
     def get_receiver_filtered_queryset(self, collections=None, **kwargs):
         q = models.Q()
+        all_collections = self.get_newsletter_receiver_collections()
+        part_ids = []
         for collection in collections:
-            q |= models.Q(events__pk=int(collection))
-        return Participant.objects.filter(q)
+            event_part_id = all_collections[int(collection)][1]['event_part']
+            q |= models.Q(attendances__event_part__pk=event_part_id)
+        if kwargs['has_attended']:
+            q &= models.Q(attendances__attended=True)
+        if kwargs['has_not_attended']:
+            q &= models.Q(attendances__attended=False)
+        if kwargs['is_confirmed']:
+            q &= models.Q(attendances__confirmed=True)
+        if kwargs['is_not_confirmed']:
+            q &= models.Q(attendances__confirmed=False)
+        return Participant.objects.filter(q).distinct()
     
     def send_subscribe_mail(self, participant):
         if self.translation.subscribe_mail is None:
@@ -166,8 +173,10 @@ class EventAdmin(JobUnitAdmin):
     list_display = ('__unicode__', 'active', 'get_participant_count', 'get_max_participants')
     readonly_fields = ('date_start', 'date_end')
     collection_selection_form_extra_fields = {
-        'attended': forms.BooleanField(required=False),
-        'confirmed': forms.BooleanField(required=False),
+        'has_attended': forms.BooleanField(label='Only attended',required=False),
+        'has_not_attended': forms.BooleanField(label='Only not attended',required=False),
+        'is_confirmed': forms.BooleanField(label='Only confirmed',required=False),
+        'is_not_confirmed': forms.BooleanField(label='Only not confirmed',required=False),
     }
     
     def tool_excel_export(self, request, obj, button):
