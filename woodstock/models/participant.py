@@ -5,7 +5,6 @@ from django.utils.functional import wraps
 
 from woodstock import settings
 from woodstock.models import Attendance
-from woodstock.models import Event
 from woodstock.models import Person
 
 #-----------------------------------------------------------------------------
@@ -61,6 +60,7 @@ class Participant(Person):
         """
         tries to attend all parts in event_parts
         """
+        from woodstock.models import Event        
         if settings.SUBSCRIPTION_CONSUMES_INVITATION and self.attendances.count():
             raise exceptions.PermissionDenied("You can only attend one event.")
         if not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTS or not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS:
@@ -109,6 +109,8 @@ class Participant(Person):
         Changes event attendances. If old_event_parts is omited all current
         attendances are deleted.
         """
+        from woodstock.models import Event
+        
         old_attendances = self._cancel_events(old_event_parts, delete=False)
         attendances = self._attend_events(new_event_parts)
         if not attendances:

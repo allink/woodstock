@@ -15,7 +15,6 @@ from pennyblack.options import JobUnitMixin, \
 from woodstock import settings
 from woodstock.models import EventPart
 from woodstock.models import ExtendableMixin
-from woodstock.models import Participant
 
 import datetime
 try:
@@ -119,6 +118,8 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
         return collections
         
     def get_receiver_filtered_queryset(self, collections=None, **kwargs):
+        from woodstock.models import Participant
+        
         q = models.Q()
         all_collections = self.get_newsletter_receiver_collections()
         part_ids = []
@@ -184,6 +185,8 @@ class EventAdmin(JobUnitAdmin):
     export_fields = ('salutation', 'firstname', 'surname', 'email', 'language') 
     
     def export_excel(self, request, object_id):
+        from woodstock.models import Participant
+        
         obj = get_object_or_404(self.model, pk=object_id)
         
         response = HttpResponse(mimetype="application/ms-excel")

@@ -1,4 +1,3 @@
-Participant, Event = None, None
 from woodstock.models.extendable import ExtendableMixin
 from woodstock.models.attendance import Attendance    
 from woodstock.models.event_part import EventPart
