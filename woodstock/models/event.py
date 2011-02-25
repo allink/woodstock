@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.core import exceptions
 from django.db import models
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import slugify
 
 from feincms.translations import TranslatedObjectMixin, Translation, \
@@ -20,9 +21,9 @@ import datetime
 try:
     import xlwt
 except ImportError:
-    EXCEL_EXPORT_ACTIVE = False
+    EXPORT_EXCEL_ACTIVE = False
 else:
-    EXCEL_EXPORT_ACTIVE = True
+    EXPORT_EXCEL_ACTIVE = True
 
 #-----------------------------------------------------------------------------
 # Event
@@ -178,33 +179,42 @@ class EventAdmin(JobUnitAdmin):
         'is_confirmed': forms.BooleanField(label='Only confirmed',required=False),
         'is_not_confirmed': forms.BooleanField(label='Only not confirmed',required=False),
     }
+    change_form_template = "admin/woodstock/event/change_form.html"
     
-    def tool_excel_export(self, request, obj, button):
+    export_fields = ('salutation', 'firstname', 'surname', 'email', 'language') 
+    
+    def export_excel(self, request, object_id):
+        obj = get_object_or_404(self.model, pk=object_id)
+        
         response = HttpResponse(mimetype="application/ms-excel")
-        response['Content-Disposition'] = 'attachment; filename=%s.xls' % (slugify(obj.name),)
+        response['Content-Disposition'] = 'attachment; filename=%s.xls' % (obj.slug,)
         
         wb = xlwt.Workbook()
-        ws = wb.add_sheet(slugify(obj.name))
+        ws = wb.add_sheet('All')
         row = 0
         
-        ws.write(row, 0, 'Firstname')
-        ws.write(row, 1, 'Surname')
-        ws.write(row, 2, 'Company')
-        ws.write(row, 3, 'Location')
-        ws.write(row, 4, 'Email')
-        ws.write(row, 5, 'Language')
-        ws.write(row, 6, 'Registred')
+        for column, name in enumerate(self.export_fields):
+            ws.write(row, column, name)
         row += 1
         
-        for participant in obj.participants.all():
-            ws.write(row, 0, participant.firstname)
-            ws.write(row, 1, participant.surname)
-            ws.write(row, 2, participant.company)
-            ws.write(row, 3, participant.location)
-            ws.write(row, 4, participant.email)
-            ws.write(row, 5, participant.language)
-            ws.write(row, 6, participant.date_registred.strftime('%d.%m.%Y %H:%M'))
-            row += 1
-        
+        for participant in Participant.objects.filter(attendances__event_part__event=obj).filter(attendances__confirmed=True):
+            for column, name in enumerate(self.export_fields):
+                ws.write(row, column, unicode(getattr(participant,name,'')))
+            row += 1        
         wb.save(response)
         return response
+    
+    def get_urls(self):
+        from django.conf.urls.defaults import patterns, url
+        urls = super(EventAdmin, self).get_urls()
+        if not EXPORT_EXCEL_ACTIVE:
+            return urls
+        info = self.model._meta.app_label, self.model._meta.module_name
+        my_urls = patterns('',
+            url(r'^(?P<object_id>\d+)/export_excel/$', self.admin_site.admin_view(self.export_excel), name='%s_%s_export_excel' % info),
+        )
+        return my_urls + urls
+    
+    def change_view(self, request, object_id, extra_context={}):
+        extra_context['export_excel_active']=EXPORT_EXCEL_ACTIVE
+        return super(EventAdmin, self).change_view(request, object_id, extra_context)
