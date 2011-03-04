@@ -101,7 +101,13 @@ class Participant(Person):
         Cancels all event attendances to events in event_parts. If event_parts
         is omited all attendances are cancled.
         """
-        return self._cancel_events(event_parts)
+        from woodstock.models import Event
+        attendances = self._cancel_events(event_parts)
+        # send emails
+        for event in Event.objects.filter(parts__in=list(a.event_part for a in attendances)):
+            print event
+            event.send_unsubscribe_mail(self)
+        return attendances
         
     @callback('change_events')
     def change_events(self, new_event_parts, old_event_parts=None):
