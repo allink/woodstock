@@ -17,7 +17,7 @@ class Person(models.Model, NewsletterReceiverMixin, ExtendableMixin):
     salutation = models.ForeignKey('woodstock.Salutation')
     firstname = models.CharField(verbose_name=_('Firstname'), max_length=100)
     surname = models.CharField(verbose_name=_('Surname'), max_length=100)
-    email = models.EmailField(verbose_name=_('Email'), unique=settings.PERSON_EMAIL_UNIQUE)
+    email = models.EmailField(verbose_name=_('E-Mail'), unique=settings.PERSON_EMAIL_UNIQUE)
     password = models.CharField(verbose_name=_('Password'),max_length=100)
     is_active = models.BooleanField(verbose_name=_('Active'), default=False)
     last_login = models.DateTimeField(_('last login'), default=datetime.datetime.now)
