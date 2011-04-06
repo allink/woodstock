@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.core import exceptions
 from django.db import models
 from django.utils.functional import wraps
+from django.utils.translation import ugettext_lazy as _
 
 from woodstock import settings
 from woodstock.models import Attendance
@@ -62,16 +63,16 @@ class Participant(Person):
         """
         from woodstock.models import Event        
         if settings.SUBSCRIPTION_CONSUMES_INVITATION and self.attendances.count():
-            raise exceptions.PermissionDenied("You can only attend one event.")
+            raise exceptions.PermissionDenied(_("You can only attend one event."))
         if not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTS or not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS:
             events = Event.objects.active().filter(
                 models.Q(parts__attendances__confirmed=True,parts__attendances__participant=self)
                 | models.Q(parts__in=event_parts)
                 )
             if not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTS and events.distinct().count() > 1:
-                raise exceptions.PermissionDenied("You can only attend one event.")
+                raise exceptions.PermissionDenied(_("You can only attend one event."))
             if not settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS and events.distinct().count() != events.count():
-                raise exceptions.PermissionDenied("You can only attend one eventpart per event.")
+                raise exceptions.PermissionDenied(_("You can only attend one eventpart per event."))
         attendances = self._attend_events(event_parts)
         if not attendances:
             return False
@@ -105,7 +106,6 @@ class Participant(Person):
         attendances = self._cancel_events(event_parts)
         # send emails
         for event in Event.objects.filter(parts__in=list(a.event_part for a in attendances)):
-            print event
             event.send_unsubscribe_mail(self)
         return attendances
         
@@ -131,7 +131,7 @@ class Participant(Person):
     
     def save(self, *args, **kwargs):
         if settings.SUBSCRIPTION_NEEDS_INVITATION and self.invitee is None:
-            raise exceptions.PermissionDenied("Only invited Persons can register.")
+            raise exceptions.PermissionDenied(_("Only invited Persons can register."))
         super(Participant,self).save(*args, **kwargs)
     
     @classmethod
