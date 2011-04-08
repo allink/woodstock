@@ -143,9 +143,9 @@ msgstr ""
 #: views/registration.py:40
 #: views/registration.py:59
 msgid "Password successfully changed."
-msgstr ""
+msgstr "Ihr Passwort wurde erfolgreich geändert."
 
 #: views/registration.py:83
 msgid "Userdata successfully changed."
-msgstr ""
+msgstr "Ihre Benutzerdaten wurden erfolgreich geändert."
 
