@@ -31,3 +31,8 @@ ADMIN_HAS_EVENT = getattr(settings, 'WOODSTOCK_ADMIN_HAS_EVENT', True)
 ADMIN_HAS_INVITEE = getattr(settings, 'WOODSTOCK_ADMIN_HAS_INVITEE', True)
 ADMIN_HAS_GROUP = getattr(settings, 'WOODSTOCK_ADMIN_HAS_GROUP', True)
 ADMIN_HAS_SALUTATION = getattr(settings, 'WOODSTOCK_ADMIN_HAS_SALUTATION', True)
+
+# icalendar view
+
+# you can use %(part_name)s and %(event_name)s here
+ICS_EVENT_PART_NAME = getattr(settings, 'WOODSTOCK_ICS_EVENT_PART_NAME', "%(event_name)s - %(part_name)s")

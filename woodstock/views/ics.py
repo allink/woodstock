@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 
 from woodstock.models import EventPart
 from woodstock.views.decorators import registration_required
+from woodstock import settings
 
 import icalendar
 import datetime
@@ -15,7 +16,7 @@ def _event_part_ics(event_parts):
     cal.add('version', '2.0')
     for event_part in event_parts:
         event = icalendar.Event()
-        event.add('summary', "%s %s" % (event_part.event.translation.name, event_part.name))
+        event.add('summary', settings.ICS_EVENT_PART_NAME % {'event_name':event_part.event.translation.name, 'part_name':event_part.name})
         event.add('dtstart', event_part.date_start)
         event.add('dtend', event_part.date_end)
         event.add('dtstamp', datetime.datetime.now())
