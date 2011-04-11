@@ -1,5 +1,5 @@
 from django.conf import settings
-
+from django.utils.translation import ugettext_lazy as _
 LANGUAGES = getattr(settings, 'LANGUAGES')
 LANGUAGE_CODE = getattr(settings, 'LANGUAGE_CODE')
 
@@ -36,3 +36,8 @@ ADMIN_HAS_SALUTATION = getattr(settings, 'WOODSTOCK_ADMIN_HAS_SALUTATION', True)
 
 # you can use %(part_name)s and %(event_name)s here
 ICS_EVENT_PART_NAME = getattr(settings, 'WOODSTOCK_ICS_EVENT_PART_NAME', "%(event_name)s - %(part_name)s")
+
+# success messages
+MESSAGES_LOST_PASSWORD = getattr(settings, 'WOODSTOCK_MESSAGES_LOST_PASSWORD', _('You should have received a email with instructions on how to change your password.'))
+MESSAGES_PASSWORD_CHANGED = getattr(settings, 'WOODSTOCK_MESSAGES_PASSWORD_CHANGED', _('Password successfully changed.'))
+MESSAGES_USERDATA_CHANGED = getattr(settings, 'WOODSTOCK_MESSAGES_USERDATA_CHANGED', _('Userdata successfully changed.'))

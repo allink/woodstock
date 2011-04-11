@@ -3,7 +3,8 @@ from woodstock.models import Participant
 from woodstock.views import get_redirect_url
 from woodstock.views.decorators import registration_required, \
     invitation_required
-from woodstock.forms import SetPasswordForm, PasswordChangeForm, ParticipantForm
+from woodstock.forms import SetPasswordForm, PasswordChangeForm, \
+    ParticipantForm, LostPasswordForm
 
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
@@ -26,6 +27,19 @@ def start(request):
     # todo: hier implementieren
     pass
 
+def lost_password_view(request, template_name='woodstock/registration/lost_password.html'):
+    if request.method == 'POST':
+        lost_password_form = LostPasswordForm(request.POST)
+        if lost_password_form.is_valid():
+            lost_password_form.save()
+            messages.success(request, settings.MESSAGES_LOST_PASSWORD)
+            return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
+    if 'lost_password_form' not in locals():
+        lost_password_form = LostPasswordForm()
+    context = {'lost_password_form':lost_password_form}
+    context.update(csrf(request))
+    return render_to_response(template_name, context,context_instance = RequestContext(request))
+
 @registration_required
 @csrf_protect
 def set_new_password(request, set_password_form=SetPasswordForm, template_name='woodstock/registration/set_new_password.html'):
@@ -37,7 +51,7 @@ def set_new_password(request, set_password_form=SetPasswordForm, template_name='
         form = set_password_form(user, request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, _('Password successfully changed.'))
+            messages.success(request, settings.MESSAGES_PASSWORD_CHANGED)
             return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
     else:
         form = set_password_form(None)
@@ -56,7 +70,7 @@ def change_password(request, password_change_form=PasswordChangeForm, template_n
         form = password_change_form(user, request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, _('Password successfully changed.'))
+            messages.success(request, settings.MESSAGES_PASSWORD_CHANGED)
             return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
     else:
         form = password_change_form(user)
@@ -80,7 +94,7 @@ def change_userdata(request, change_userdata_form=ParticipantForm):
         form = change_userdata_form(request.POST, instance=user)
         if form.is_valid():
             form.save()
-            messages.success(request, _('Userdata successfully changed.'))
+            messages.success(request, settings.MESSAGES_USERDATA_CHANGED)
             return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
     else:
         form = change_userdata_form(instance=user)
