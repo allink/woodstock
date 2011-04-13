@@ -14,6 +14,7 @@ def _event_part_ics(event_parts):
     cal = icalendar.Calendar()
     cal.add('prodid', '-//Woodstock//')
     cal.add('version', '2.0')
+    cal.add('method', 'REQUEST')
     for event_part in event_parts:
         event = icalendar.Event()
         event.add('summary', settings.ICS_EVENT_PART_NAME % {'event_name':event_part.event.translation.name, 'part_name':event_part.name})
