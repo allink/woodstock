@@ -9,6 +9,9 @@ import icalendar
 import datetime
 import random
 import hashlib
+import os
+
+TZ = datetime.tzinfo(os.environ['TZ'])
 
 def _event_part_ics(event_parts):
     cal = icalendar.Calendar()
@@ -18,9 +21,9 @@ def _event_part_ics(event_parts):
     for event_part in event_parts:
         event = icalendar.Event()
         event.add('summary', settings.ICS_EVENT_PART_NAME % {'event_name':event_part.event.translation.name, 'part_name':event_part.name})
-        event.add('dtstart', event_part.date_start)
-        event.add('dtend', event_part.date_end)
-        event.add('dtstamp', datetime.datetime.now())
+        event.add('dtstart', event_part.date_start.replace(tzinfo=TZ))
+        event.add('dtend', event_part.date_end.replace(tzinfo=TZ))
+        event.add('dtstamp', datetime.datetime.now().replace(tzinfo=TZ))
         event['uid'] = '%s/%s/woodstock' % (event_part.id, hashlib.md5(str(random.random())).hexdigest()[:10])
         event.add('priority', 5)
         cal.add_component(event)
