@@ -1,5 +1,6 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils.tzinfo import LocalTimezone
 
 from woodstock.models import EventPart
 from woodstock.views.decorators import registration_required
@@ -9,9 +10,6 @@ import icalendar
 import datetime
 import random
 import hashlib
-import os
-
-TZ = datetime.tzinfo(os.environ['TZ'])
 
 def _event_part_ics(event_parts):
     cal = icalendar.Calendar()
@@ -21,9 +19,12 @@ def _event_part_ics(event_parts):
     for event_part in event_parts:
         event = icalendar.Event()
         event.add('summary', settings.ICS_EVENT_PART_NAME % {'event_name':event_part.event.translation.name, 'part_name':event_part.name})
-        event.add('dtstart', event_part.date_start.replace(tzinfo=TZ))
-        event.add('dtend', event_part.date_end.replace(tzinfo=TZ))
-        event.add('dtstamp', datetime.datetime.now().replace(tzinfo=TZ))
+        tz_start = LocalTimezone(event_part.date_start)
+        event.add('dtstart', event_part.date_start.replace(tzinfo=tz_start))
+        tz_end = LocalTimezone(event_part.date_end)
+        event.add('dtend', event_part.date_end.replace(tzinfo=tz_end))
+        tz_stamp = LocalTimezone(datetime.datetime.now())
+        event.add('dtstamp', datetime.datetime.now().replace(tzinfo=tz_stamp))
         event['uid'] = '%s/%s/woodstock' % (event_part.id, hashlib.md5(str(random.random())).hexdigest()[:10])
         event.add('priority', 5)
         cal.add_component(event)
