@@ -146,16 +146,6 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
             return
         self.translation.unsubscribe_mail.send(participant, group=self)
         
-    def get_extra_links(self):
-        """
-        Give pennyblack the needed extra links.
-        """
-        from woodstock.views.ics import event_parts_email_view
-        return {
-            'event_parts_ics': event_parts_email_view,
-        }
-
-    
     @classmethod
     def register_extension(cls, register_fn):
         register_fn(cls, EventAdmin, EventTranslation, EventTranslationInline, EventPart, EventPartInline)
