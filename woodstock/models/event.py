@@ -146,16 +146,6 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
             return
         self.translation.unsubscribe_mail.send(participant, group=self)
         
-    def get_extra_links(self):
-        """
-        Give pennyblack the needed extra links.
-        """
-        from woodstock.views.ics import event_parts_email_view
-        return {
-            'event_parts_ics': event_parts_email_view,
-        }
-
-    
     @classmethod
     def register_extension(cls, register_fn):
         register_fn(cls, EventAdmin, EventTranslation, EventTranslationInline, EventPart, EventPartInline)
@@ -231,3 +221,8 @@ class EventAdmin(JobUnitAdmin):
     def change_view(self, request, object_id, extra_context={}):
         extra_context['export_excel_active']=EXPORT_EXCEL_ACTIVE
         return super(EventAdmin, self).change_view(request, object_id, extra_context)
+
+# register view links
+from pennyblack.models import Newsletter
+from woodstock.views.ics import event_parts_email_view
+Newsletter.register_view_link('woodstock.event_parts_ics', event_parts_email_view)
