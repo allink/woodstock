@@ -14,6 +14,17 @@ class SalutationManager(models.Manager):
         Returns a queryset with all salutations aviable in the current language
         """
         return self.filter(language=translation.get_language())
+    
+    def get_or_add(self, text, language=None):
+        try:
+            return self.get(text__iexact=text)
+        except:
+            pass
+        try:
+            return self.filter(language=language).get(text__is=text)
+        except:
+            pass
+        return self.create(text=text, language=language)
 
 class Salutation(models.Model):
     text = models.CharField(max_length=20)

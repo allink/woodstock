@@ -14,9 +14,6 @@ import csv
 #-----------------------------------------------------------------------------
 class Group(models.Model, JobUnitMixin):
     name = models.CharField(max_length=100)
-    event = models.ForeignKey('woodstock.Event', null=True, blank=True, default=None,
-        help_text="Customers will be redirected to this event"
-    )
     
     class Meta:
         ordering = ('name',)
@@ -25,9 +22,20 @@ class Group(models.Model, JobUnitMixin):
     def __unicode__(self):
         return self.name
     
-    def get_customer_count(self):
-        return str(self.customers.count())
-    get_customer_count.short_description = "Customers"
+    def get_invitations_count(self):
+        return str(self.invitations.count())
+    get_invitations_count.short_description = "Invitations"
+    
+    def get_newsletter_receiver_collections(self):
+        return (('all',{}),)
+    
+    def get_receiver_queryset(self):
+        return self.invitations.all()
+    
+    @classmethod
+    def register_extension(cls, register_fn):
+        register_fn(cls, GroupAdmin, GroupAdminForm)
+
 
 class GroupAdminForm(forms.ModelForm):
     import_field = forms.FileField(label="CSV import", required=False)
@@ -36,39 +44,40 @@ class GroupAdminForm(forms.ModelForm):
     class Meta:
         model = Group
     
+    def importrow_to_kwargs(row, language=None):
+        from woodstock.models import Salutation
+        return {
+            'salutation':Salutation.objects.get_or_add(row[0], language),
+            'firstname': row[1],
+            'surname': row[2],
+            'email': row[3],
+        }
+    
     def save(self, commit=True):
+        from woodstock.models import Invitee
         model = super(GroupAdminForm, self).save(commit=False)
         model.save()
         if self.cleaned_data['import_field']:
             reader = csv.reader(self.cleaned_data['import_field'], delimiter=';')
             for row in reader:
-                if row[0] == 'Herr':
-                    salutation = 1
-                elif row[0] == 'Frau':
-                    salutation = 2
-                else:
-                    salutation = 0
-                invitee = Invitee(
-                    salutation=salutation,
-                    title=row[1],
-                    firstname=row[2],
-                    surname=row[3],
-                    company=row[4],
-                    location=row[5],
-                    email=row[6],
-                    language=self.cleaned_data['language'],
-                )
+                kwargs = self.importrow_to_kwargs(row, language=self.cleaned_data['language'])
+                kwargs.update({
+                    'is_active':True,
+                    'language':self.cleaned_data['language'],
+                    last_login:None,
+                })
+                invitee = Invitee(**kwargs)
                 invitee.save()
                 invitee.groups.add(model)
         return model
 
 class GroupAdmin(JobUnitAdmin):
-    list_display = ('name', 'get_customer_count',)
+    list_display = ('name', 'get_invitations_count',)
     fieldsets = (
         (None, {
-            'fields': ('name', 'event',),
+            'fields': ('name',),
         }),
-        ('Add Customers', {
+        ('Add Invitations', {
             'fields': ('import_field', 'language',),
         }),
     )
