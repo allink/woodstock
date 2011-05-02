@@ -64,7 +64,7 @@ class GroupAdminForm(forms.ModelForm):
                 kwargs.update({
                     'is_active':True,
                     'language':self.cleaned_data['language'],
-                    last_login:None,
+                    'last_login':None,
                 })
                 invitee = Invitee(**kwargs)
                 invitee.save()
