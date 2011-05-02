@@ -20,7 +20,7 @@ class Person(models.Model, NewsletterReceiverMixin, ExtendableMixin):
     email = models.EmailField(verbose_name=_('E-Mail'), unique=settings.PERSON_EMAIL_UNIQUE)
     password = models.CharField(verbose_name=_('Password'),max_length=100)
     is_active = models.BooleanField(verbose_name=_('Active'), default=False)
-    last_login = models.DateTimeField(_('last login'), default=datetime.datetime.now)
+    last_login = models.DateTimeField(_('last login'), null=True)
     language = models.CharField(max_length=5, choices=settings.LANGUAGES,
         default=settings.LANGUAGE_CODE, blank=True)
     
