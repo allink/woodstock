@@ -16,7 +16,7 @@ class ParticipantForm(forms.ModelForm):
     
     class Meta:
         model = Participant
-        fields = ('salutation', 'firstname', 'surname', 'email')
+        fields = settings.PARTICIPANT_FORM_FIELDS
 
     def __init__(self, *args, **kwargs):
         if not 'request' in kwargs:
@@ -31,11 +31,17 @@ class ParticipantForm(forms.ModelForm):
             self.fields['event_part'] = forms.ModelChoiceField(queryset=event_parts_queryset, widget=event_parts_widget, empty_label=None)
         else:
             super(ParticipantForm,self).__init__(*args, **kwargs)
+        if not 'salutation' in self._meta.fields:
+            del self.fields['salutation']
     
     def save(self):
-        super(ParticipantForm, self).save()
+        super(ParticipantForm, self).save(commit=False)
         if isinstance(self.request.user, Invitee):
-            self.instance.invitee = self.request.user
+            invitation = self.request.user
+            self.instance.invitee = invitation
+            for field_name in settings.PARTICIPANT_FORM_COPY_FIELDS:
+                setattr(self.instance, field_name, getattr(invitation, field_name))
+        self.instance.save()
         result = self.instance.attend_events([self.cleaned_data['event_part']])
         if not result:
             self.instance.delete()
