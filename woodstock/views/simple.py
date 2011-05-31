@@ -1,15 +1,19 @@
-from woodstock.models import Event, EventPart, Participant
+from woodstock import settings
+from woodstock.models import Event, EventPart
 from woodstock.forms import ParticipantForm
+from woodstock.views import get_redirect_url
 from woodstock.views.decorators import registration_required, \
     invitation_required
 
 from feincms.content.application.models import reverse
 
+from django.contrib import messages
 from django.core.context_processors import csrf
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.utils import translation
+from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
 
 def index(request):
@@ -39,23 +43,22 @@ detail_invitation_required = invitation_required(detail)
 detail_registration_required = registration_required(detail)
 
 @csrf_protect
-def signup(request, slug):
+def signup(request, slug, participant_form=ParticipantForm):
     """
     Signup view with all possible parts of an event listed and selectable
     """
     event = Event.objects.get_by_slug(slug)
     if request.method == 'POST':
-        p = Participant(language=translation.get_language())
-        form = ParticipantForm(request.POST, instance=p, event_parts_queryset=event.parts.active())
+        form = ParticipantForm(request.POST, request=request, event_parts_queryset=event.parts.active())
         if form.is_valid():
-            form.save()
-            success = form.instance.attend_events(form.cleaned_data['event_parts'])
+            if form.save():
+                messages.success(request, _("Thank you for signing up."))
+                return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
+            else:
+                messages.error(request, _("We are sorry, but your registration could not be saved."))
+                return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
     else:
-        if request.session.get('customer_id', False):
-            customer=Customer.objects.filter(id=request.session.get('customer_id'))[0]
-            form = ParticipantForm(instance=customer, event_parts_queryset=event.parts.active())
-        else:
-            form = ParticipantForm(event_parts_queryset=event.parts.active())
+        form = ParticipantForm(request=request , event_parts_queryset=event.parts.active())
     context = {'form': form, 'event': event}
     context.update(csrf(request))
     return render_to_response(

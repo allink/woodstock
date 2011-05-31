@@ -1,30 +1,46 @@
 # a lot of this code is mostly from django.contrib.auth.forms
 
-from woodstock.models import Participant, Salutation
+from woodstock.models import Participant, Invitee, Salutation
 from woodstock import settings
 
 from pennyblack import send_newsletter   
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import SetPasswordForm as AuthSetPasswordForm
+from django.core import exceptions
 from django.utils.translation import ugettext_lazy as _
 
 class ParticipantForm(forms.ModelForm):
     salutation = forms.ModelChoiceField(queryset= Salutation.objects.localized(),
-        label=_('Salutation'), empty_label=None)
+        label=_('Salutation'))
     
     class Meta:
         model = Participant
         fields = ('salutation', 'firstname', 'surname', 'email')
 
     def __init__(self, *args, **kwargs):
+        if not 'request' in kwargs:
+            raise exceptions.ImproperlyConfigured('ParticipantForm needs the request.')
+        self.request = kwargs['request']
+        del kwargs['request']
         if 'event_parts_queryset' in kwargs.keys():
             event_parts_queryset = kwargs['event_parts_queryset']
+            event_parts_widget = kwargs.get('event_parts_widget', forms.RadioSelect())
             del kwargs['event_parts_queryset']
             super(ParticipantForm,self).__init__(*args, **kwargs)
-            self.fields['event_parts'] = forms.ModelMultipleChoiceField(queryset=event_parts_queryset)
+            self.fields['event_part'] = forms.ModelChoiceField(queryset=event_parts_queryset, widget=event_parts_widget, empty_label=None)
         else:
             super(ParticipantForm,self).__init__(*args, **kwargs)
+    
+    def save(self):
+        super(ParticipantForm, self).save()
+        if isinstance(self.request.user, Invitee):
+            self.instance.invitee = self.request.user
+        result = self.instance.attend_events([self.cleaned_data['event_part']])
+        if not result:
+            self.instance.delete()
+            return False
+        return self.instance
     
 class LostPasswordForm(forms.Form):
     email = forms.EmailField(label=_("E-mail"), max_length=75)
