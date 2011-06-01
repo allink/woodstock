@@ -41,7 +41,8 @@ ICS_EVENT_PART_NAME = getattr(settings, 'WOODSTOCK_ICS_EVENT_PART_NAME', "%(even
 MESSAGES_LOST_PASSWORD = getattr(settings, 'WOODSTOCK_MESSAGES_LOST_PASSWORD', _('You should have received a email with instructions on how to change your password.'))
 MESSAGES_PASSWORD_CHANGED = getattr(settings, 'WOODSTOCK_MESSAGES_PASSWORD_CHANGED', _('Password successfully changed.'))
 MESSAGES_USERDATA_CHANGED = getattr(settings, 'WOODSTOCK_MESSAGES_USERDATA_CHANGED', _('Userdata successfully changed.'))
-
+MESSAGES_SIMPLE_SIGNUP_SUCCESS = getattr(settings, 'WOODSTOCK_MESSAGES_SIMPLE_SIGNUP_SUCCESS', _("Thank you for signing up."))
+MESSAGES_SIMPLE_SIGNUP_FAILED = getattr(settings, 'WOODSTOCK_MESSAGES_SIMPLE_SIGNUP_FAILED', _("We are sorry, but your registration could not be saved."))
 # participant form
 PARTICIPANT_FORM_FIELDS = getattr(settings, 'WOODSTOCK_PARTICIPANT_FORM_FIELDS', ('salutation', 'firstname', 'surname', 'email'))
 PARTICIPANT_FORM_COPY_FIELDS = getattr(settings, 'WOODSTOCK_PARTICIPANT_FORM_COPY_FIELDS', tuple())

@@ -52,10 +52,10 @@ def signup(request, slug, participant_form=ParticipantForm):
         form = ParticipantForm(request.POST, request=request, event_parts_queryset=event.parts.active())
         if form.is_valid():
             if form.save():
-                messages.success(request, _("Thank you for signing up."))
+                messages.success(request, settings.MESSAGES_SIMPLE_SIGNUP_SUCCESS)
                 return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
             else:
-                messages.error(request, _("We are sorry, but your registration could not be saved."))
+                messages.error(request, settings.MESSAGES_SIMPLE_SIGNUP_FAILED)
                 return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
     else:
         form = ParticipantForm(request=request , event_parts_queryset=event.parts.active())
