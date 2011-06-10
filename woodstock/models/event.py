@@ -110,6 +110,13 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
         return self.max_participants or 'Unlimitiert'
     get_max_participants.short_description = "Maximum Participants"
     
+    @property
+    def signable(self):
+        return self.is_signable()
+        
+    def is_signable(self):
+        return self.parts.filter(signable=True).filter(date_start__lt=datetime.datetime.now()).count() > 0
+    
     # newsletter functions
     def get_newsletter_receiver_collections(self):
         collections = tuple()
