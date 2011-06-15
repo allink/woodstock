@@ -23,7 +23,10 @@ class ParticipantForm(forms.ModelForm):
             raise exceptions.ImproperlyConfigured('ParticipantForm needs the request.')
         self.request = kwargs['request']
         del kwargs['request']
-        if 'event_parts_queryset' in kwargs.keys():
+        if 'autoattend_parts' in kwargs:
+            self.autoattend_parts = kwargs['autoattend_parts']
+            del kwargs['autoattend_parts']
+        if 'event_parts_queryset' in kwargs:
             event_parts_queryset = kwargs['event_parts_queryset']
             event_parts_widget = kwargs.get('event_parts_widget', forms.RadioSelect())
             del kwargs['event_parts_queryset']
@@ -42,7 +45,12 @@ class ParticipantForm(forms.ModelForm):
             for field_name in settings.PARTICIPANT_FORM_COPY_FIELDS:
                 setattr(self.instance, field_name, getattr(invitation, field_name))
         self.instance.save()
-        result = self.instance.attend_events([self.cleaned_data['event_part']])
+        parts = []
+        if 'event_part' in self.fields:
+            parts += [self.cleaned_data['event_part']]
+        if hasattr(self, 'autoattend_parts'):
+            parts += self.autoattend_parts
+        result = self.instance.attend_events(parts)
         if not result:
             self.instance.delete()
             return False
