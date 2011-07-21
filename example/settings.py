@@ -29,11 +29,11 @@ DATABASES = {
 # timezone as the operating system.
 # If running in a Windows environment this must be set to the same as your
 # system time zone.
-TIME_ZONE = 'America/Chicago'
+TIME_ZONE = 'Europe/Zurich'
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 
 SITE_ID = 1
 
@@ -53,15 +53,22 @@ MEDIA_ROOT = os.path.join(PROJECT_DIR, 'media/')
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = '/media/'
+STATIC_URL = '/static/'
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
 # Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/media/admin/'
-FEINCMS_ADMIN_MEDIA = '/media/feincms/'
+ADMIN_MEDIA_PREFIX = '/static/admin/'
+FEINCMS_ADMIN_MEDIA = '/static/feincms/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'l@rc4lhrmj1zifz&g3b-b&&jp8df^tafhtg@-j=ajr@k@k^un@'
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+)
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -83,16 +90,22 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
+    'django.core.context_processors.static',
     'django.core.context_processors.request',
     "django.contrib.messages.context_processors.messages",
 )
 
 ROOT_URLCONF = 'example.urls'
 
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+# Additional locations of static files
+STATICFILES_DIRS = (
+    # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+)
+
+TEMPLATE_DIRS = (
+    os.path.join(PROJECT_DIR,'templates'),
 )
 
 INSTALLED_APPS = (
@@ -101,13 +114,27 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
+    'django.contrib.staticfiles',
     'django.contrib.admin',
     'django.contrib.admindocs',
-    'eventmodul',
-    'south',
+    'feincms',
+    'feincms.module.page',
+    'feincms.module.medialibrary',
+    'woodstock',
+    'pennyblack',
+    'example',
+    # 'south', # only for development
 )
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 LANGUAGES = (
     ('de','German'),
     ('en','English'),
 )
+
+FEINCMS_RICHTEXT_INIT_CONTEXT = {
+    'TINYMCE_JS_URL': os.path.join(STATIC_URL, 'javascript/tiny_mce/tiny_mce.js'),
+    'TINYMCE_CONTENT_CSS_URL': None,
+    'TINYMCE_LINK_LIST_URL': None
+}

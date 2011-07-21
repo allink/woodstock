@@ -1,0 +1,8 @@
+{% load i18n %}
+<h2>{{event.translation.name}}</h2>
+<ul>
+    {% for part in event.parts.all %}
+        <li>{{part.name}} - {{part.date}}
+    {% endfor %}
+</ul>
+<a href="{% url event_signup event.slug %}">{% trans "Sign up" %} »</a>

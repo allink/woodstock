@@ -1,0 +1,10 @@
+{% load i18n %}
+<h2>Übersicht</h2>
+<ul class="events">
+{% for event in events %}
+    <li id="event-{{event.slug}}">
+        <div class="event-title">{{event.translation.name}}</div>
+        <div class="event-link"><a href="{% url event_detail event.slug %}">{% trans "Details / Sign up" %}</a></div>
+    </li>
+{% endfor %}
+</ul>

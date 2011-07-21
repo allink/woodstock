@@ -1,0 +1,8 @@
+{%extends "admin/pennyblack/jobunit/change_form.html" %}
+
+{% load i18n %}
+{% block object-tools-extra %}
+    {% if export_excel_active %}
+        <li><a href="export_excel/">{% trans "Export excel" %}</a></li>
+    {% endif %}
+{% endblock %}

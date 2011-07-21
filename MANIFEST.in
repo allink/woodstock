@@ -1,0 +1,4 @@
+recursive-include woodstock/templates *.html
+recursive-include woodstock/ *.json
+recursive-include woodstock/locale *.po
+recursive-include woodstock/locale *.mo

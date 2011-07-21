@@ -1,0 +1,7 @@
+{% load i18n %}
+<form action="." method="post" accept-charset="utf-8" autocomplete="off">{% csrf_token %}
+    <table border="0">
+        {{form}}
+        <tr><td colspan="2"><input type="submit" value="{% trans "save" %}"></td></tr>
+    </table>
+</form>

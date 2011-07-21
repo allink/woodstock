@@ -1,0 +1,9 @@
+{% load i18n %}
+{% get_current_language as active_language %}
+<h2>{% trans "Personal Data" %}</h2>
+<form action="." eventID="{{event.id}}" id="signup_form" method="post" accept-charset="utf-8">{% csrf_token %}
+    <ul>
+        {{form.as_ul}}
+        <li><input type="submit" value="{% trans "send" %}"></li>
+</form>
+{# todo: fully booked message #}
