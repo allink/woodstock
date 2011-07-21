@@ -29,8 +29,13 @@ class Group(models.Model, JobUnitMixin):
     def get_newsletter_receiver_collections(self):
         return (('all',{}),)
     
-    def get_receiver_queryset(self):
-        return self.invitations.all()
+    def get_receiver_filtered_queryset(self, collections=None, **kwargs):        
+        q = models.Q()
+        if kwargs['only_no_participant']:
+            q &= models.Q(participant__isnull=True)
+        if kwargs['only_participant']:
+            q &= models.Q(attendances__attended=False)
+        return self.invitations.filter(q).distinct()
     
     @classmethod
     def register_extension(cls, register_fn):
@@ -82,3 +87,7 @@ class GroupAdmin(JobUnitAdmin):
         }),
     )
     form = GroupAdminForm
+    collection_selection_form_extra_fields = {
+        'only_no_participant': forms.BooleanField(label='Only without participation',required=False),
+        'only_participant': forms.BooleanField(label='Only whith participation',required=False),
+    }
