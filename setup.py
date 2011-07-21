@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import os
 from setuptools import setup
 
 import woodstock
@@ -6,6 +7,7 @@ setup(
     name='woodstock',
     version = woodstock.__version__,
     description = 'django based event toolkit',
+    long_description=open(os.path.join(os.path.dirname(__file__), 'README.rst')).read(),
     author = 'Marc Egli',
     author_email = 'egli@allink.ch',
     url = 'http://github.com/allink/woodstock/',

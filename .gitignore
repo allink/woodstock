@@ -4,5 +4,7 @@
 \#*#
 .DS_Store
 ._*
+/woodstock.egg-info
 *.sqlite
 /dist
+/build
