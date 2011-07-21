@@ -1,3 +1,6 @@
+include AUTHORS
+include LICENSE
+include README.rst
 recursive-include woodstock/templates *.html
 recursive-include woodstock/ *.json
 recursive-include woodstock/locale *.po
