@@ -9,12 +9,20 @@ setup(
     author = 'Marc Egli',
     author_email = 'egli@allink.ch',
     url = 'http://github.com/allink/woodstock/',
+    license='BSD License',
+    platforms=['OS Independent'],
     packages=[
         'woodstock',
+        'woodstock.content',
+        'woodstock.content.event',
+        'woodstock.feincms_extensions',
+        'woodstock.models',
+        'woodstock.templatetags',
+        'woodstock.urls',
+        'woodstock.views',
     ],
-    package_data={'woodstock':'templates/*.html'},
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',
@@ -24,7 +32,11 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     requires=[
-        'Django(>=1.2.1)',
+        'FeinCMS(>=1.3.0)',
+        'Django(>=1.3)',
+        'pennyblack(>=0.2.1)',
+        'icalendar(>=2.1)',
     ],
+    include_package_data=True,    
     
 )
