@@ -97,7 +97,7 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
     
     @property
     def available_places(self):
-        return self. max_participants - self.participant_count
+        return self.max_participants - self.participant_count
     
     @property
     def max_participants(self):
