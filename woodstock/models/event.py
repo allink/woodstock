@@ -115,7 +115,7 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
         return self.is_signable()
         
     def is_signable(self):
-        return self.parts.filter(signable=True).filter(date_start__lt=datetime.datetime.now()).count() > 0
+        return self.parts.filter(signable=True).filter(date_start__gt=datetime.datetime.now()).count() > 0
     
     # newsletter functions
     def get_newsletter_receiver_collections(self):
