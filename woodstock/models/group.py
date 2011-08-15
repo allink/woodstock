@@ -7,7 +7,6 @@ from pennyblack.options import JobUnitMixin, \
 
 from woodstock import settings
 
-import csv
 
 #-----------------------------------------------------------------------------
 # Group
@@ -42,52 +41,11 @@ class Group(models.Model, JobUnitMixin):
         register_fn(cls, GroupAdmin, GroupAdminForm)
 
 
-class GroupAdminForm(forms.ModelForm):
-    import_field = forms.FileField(label="CSV import", required=False)
-    language = forms.TypedChoiceField(choices=settings.LANGUAGES,
-        initial=settings.LANGUAGE_CODE)
-    class Meta:
-        model = Group
-    
-    def importrow_to_kwargs(row, language=None):
-        from woodstock.models import Salutation
-        return {
-            'salutation':Salutation.objects.get_or_add(row[0], language),
-            'firstname': row[1],
-            'surname': row[2],
-            'email': row[3],
-        }
-    
-    def save(self, commit=True):
-        from woodstock.models import Invitee
-        model = super(GroupAdminForm, self).save(commit=False)
-        model.save()
-        if self.cleaned_data['import_field']:
-            reader = csv.reader(self.cleaned_data['import_field'], delimiter=';')
-            for row in reader:
-                kwargs = self.importrow_to_kwargs(row, language=self.cleaned_data['language'])
-                kwargs.update({
-                    'is_active':True,
-                    'language':self.cleaned_data['language'],
-                    'last_login':None,
-                })
-                invitee = Invitee(**kwargs)
-                invitee.save()
-                invitee.groups.add(model)
-        return model
-
 class GroupAdmin(JobUnitAdmin):
     list_display = ('name', 'get_invitations_count',)
-    fieldsets = (
-        (None, {
-            'fields': ('name',),
-        }),
-        ('Add Invitations', {
-            'fields': ('import_field', 'language',),
-        }),
-    )
-    form = GroupAdminForm
+    fields = ('name',)
     collection_selection_form_extra_fields = {
         'only_no_participant': forms.BooleanField(label='Only without participation',required=False),
         'only_participant': forms.BooleanField(label='Only whith participation',required=False),
     }
+    

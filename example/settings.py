@@ -122,6 +122,7 @@ INSTALLED_APPS = (
     'feincms.module.medialibrary',
     'woodstock',
     'pennyblack',
+    'admin_import',
     'example',
     # 'south', # only for development
 )

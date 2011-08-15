@@ -23,4 +23,13 @@ class InviteeAdmin(admin.ModelAdmin):
     list_display = ('firstname', 'surname', 'email', 'language',)
     list_filter   = ('language', 'groups',)
     search_fields = ('firstname', 'surname', 'email')
+    readonly_fields = ('last_login',)
     filter_horizontal = ('groups',)
+    
+try:
+    from admin_import.options import add_import
+except ImportError, e:
+    if not e.message == 'No module named admin_import.options':
+        raise
+else:
+    add_import(InviteeAdmin, add_button=True)    

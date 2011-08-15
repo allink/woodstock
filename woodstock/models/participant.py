@@ -152,7 +152,15 @@ class AttendanceInline(admin.TabularInline):
 class ParticipantAdmin(admin.ModelAdmin):
     list_display = ('firstname', 'surname', 'email', 'language',)
     list_filter   = ('language', 'event_parts',)
-    readonly_fields = ('invitee',)
+    readonly_fields = ('invitee', 'last_login')
     search_fields = ('firstname', 'surname', 'email')
     inlines = (AttendanceInline,)
+
+try:
+    from admin_import.options import add_import
+except ImportError, e:
+    if not e.message == 'No module named admin_import.options':
+        raise
+else:
+    add_import(ParticipantAdmin, add_button=True)    
 
