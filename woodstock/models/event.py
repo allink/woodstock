@@ -13,7 +13,7 @@ from pennyblack.options import JobUnitMixin, \
     JobUnitAdmin
 
 from woodstock import settings
-from woodstock.models import EventPart
+from woodstock.models import EventPart, Participant
 from woodstock.models import ExtendableMixin
 
 import datetime
@@ -86,13 +86,13 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
     
     @property
     def participant_count(self):
-        return self.parts.active().aggregate(models.Count('participants__id'))['participants__id__count']
+        return Participant.objects.filter(attendances__confirmed=True)\
+                                  .filter(attendances__event_part__event=self)\
+                                  .filter(attendances__event_part__active=True)\
+                                  .distinct().count()
     
     def get_participant_count(self):
-        count = 0
-        for event_part in self.parts.all():
-            count += event_part.get_participant_count()
-        return count
+        return self.participant_count
     get_participant_count.short_description = "Participants"
     
     @property
