@@ -2,12 +2,15 @@
 
 from woodstock.models import Participant, Invitee, Salutation
 from woodstock import settings
+from woodstock.fields import EventPartsChoiceField, EventPartsMultipleChoiceField
 
 from pennyblack import send_newsletter   
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import SetPasswordForm as AuthSetPasswordForm
 from django.core import exceptions
+from django.db.models.query import QuerySet
+from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
 class ParticipantForm(forms.ModelForm):
@@ -28,26 +31,31 @@ class ParticipantForm(forms.ModelForm):
             del kwargs['autoattend_parts']
         if 'event_parts_queryset' in kwargs:
             event_parts_queryset = kwargs['event_parts_queryset']
-            event_parts_widget = kwargs.get('event_parts_widget', forms.RadioSelect())
             del kwargs['event_parts_queryset']
-            super(ParticipantForm,self).__init__(*args, **kwargs)
-            self.fields['event_part'] = forms.ModelChoiceField(queryset=event_parts_queryset, widget=event_parts_widget, empty_label=None)
-        else:
-            super(ParticipantForm,self).__init__(*args, **kwargs)
+        super(ParticipantForm,self).__init__(*args, **kwargs)
+        if 'event_parts_queryset' in locals():
+            if settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS:
+                self.fields['event_part'] = EventPartsMultipleChoiceField(queryset=event_parts_queryset)
+            else:
+                self.fields['event_part'] = EventPartsChoiceField(queryset=event_parts_queryset)
         if not 'salutation' in self._meta.fields:
             del self.fields['salutation']
-    
+                
     def save(self):
         super(ParticipantForm, self).save(commit=False)
         if isinstance(self.request.user, Invitee):
             invitation = self.request.user
             self.instance.invitee = invitation
+            self.instance.language = translation.get_language()
             for field_name in settings.PARTICIPANT_FORM_COPY_FIELDS:
                 setattr(self.instance, field_name, getattr(invitation, field_name))
         self.instance.save()
         parts = []
         if 'event_part' in self.fields:
-            parts += [self.cleaned_data['event_part']]
+            if isinstance(self.cleaned_data['event_part'], QuerySet):
+                parts += self.cleaned_data['event_part']
+            else:
+                parts += [self.cleaned_data['event_part']]
         if hasattr(self, 'autoattend_parts'):
             parts += self.autoattend_parts
         result = self.instance.attend_events(parts)
