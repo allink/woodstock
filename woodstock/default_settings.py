@@ -46,6 +46,7 @@ MESSAGES_SIMPLE_SIGNUP_FAILED = getattr(settings, 'WOODSTOCK_MESSAGES_SIMPLE_SIG
 # participant form
 PARTICIPANT_FORM_FIELDS = getattr(settings, 'WOODSTOCK_PARTICIPANT_FORM_FIELDS', ('salutation', 'firstname', 'surname', 'email'))
 PARTICIPANT_FORM_COPY_FIELDS = getattr(settings, 'WOODSTOCK_PARTICIPANT_FORM_COPY_FIELDS', tuple())
+PARTICIPANT_FORM_PREPOPULATE = getattr(settings, 'WOODSTOCK_PARTICIPANT_FORM_PREPOPULATE', True)
 # event part fields
 EVENT_PARTS_FULLY_BOOKED_TAG = getattr(settings, 'WOODSTOCK_PARTICIPANT_FORM_COPY_FIELDS', _(u'fully booked'))
 

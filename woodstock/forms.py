@@ -15,7 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 
 class ParticipantForm(forms.ModelForm):
     salutation = forms.ModelChoiceField(queryset= Salutation.objects.localized(),
-        label=_('Salutation'))
+                                        label=_('Salutation'))
     
     class Meta:
         model = Participant
@@ -32,6 +32,10 @@ class ParticipantForm(forms.ModelForm):
         if 'event_parts_queryset' in kwargs:
             event_parts_queryset = kwargs['event_parts_queryset']
             del kwargs['event_parts_queryset']
+        if isinstance(self.request.user, Invitee) and 'instance' not in kwargs \
+            and settings.PARTICIPANT_FORM_PREPOPULATE:
+            kwargs['initial'] = tuple((field, getattr(self.request.user, field, None)) for field in self._meta.fields)
+            print kwargs['initial']
         super(ParticipantForm,self).__init__(*args, **kwargs)
         if 'event_parts_queryset' in locals():
             if settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS:
