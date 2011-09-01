@@ -39,9 +39,9 @@ class ParticipantForm(forms.ModelForm):
         super(ParticipantForm,self).__init__(*args, **kwargs)
         if 'event_parts_queryset' in locals():
             if settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS:
-                self.fields['event_part'] = EventPartsMultipleChoiceField(queryset=event_parts_queryset)
+                self.fields['event_part'] = EventPartsMultipleChoiceField(queryset=event_parts_queryset, label=settings.PARTICIPANT_FORM_PART_FIELD_LABEL)
             else:
-                self.fields['event_part'] = EventPartsChoiceField(queryset=event_parts_queryset)
+                self.fields['event_part'] = EventPartsChoiceField(queryset=event_parts_queryset, label=settings.PARTICIPANT_FORM_PART_FIELD_LABEL)
         if not 'salutation' in self._meta.fields:
             del self.fields['salutation']
                 
