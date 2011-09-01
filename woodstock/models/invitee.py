@@ -32,4 +32,6 @@ except ImportError, e:
     if not e.message == 'No module named admin_import.options':
         raise
 else:
-    add_import(InviteeAdmin, add_button=True)    
+    from django.conf import settings as django_settings
+    if 'admin_import' in django_settings.INSTALLED_APPS:
+        add_import(InviteeAdmin, add_button=True)    
