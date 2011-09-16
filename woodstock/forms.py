@@ -35,7 +35,6 @@ class ParticipantForm(forms.ModelForm):
         if isinstance(self.request.user, Invitee) and 'instance' not in kwargs \
             and settings.PARTICIPANT_FORM_PREPOPULATE:
             kwargs['initial'] = tuple((field, getattr(self.request.user, field, None)) for field in self._meta.fields)
-            print kwargs['initial']
         super(ParticipantForm,self).__init__(*args, **kwargs)
         if 'event_parts_queryset' in locals():
             if settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS:
