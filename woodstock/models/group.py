@@ -31,9 +31,9 @@ class Group(models.Model, JobUnitMixin):
     def get_receiver_filtered_queryset(self, collections=None, **kwargs):        
         q = models.Q()
         if kwargs['only_no_participant']:
-            q &= models.Q(participant__isnull=True)
+            q &= models.Q(participants__isnull=True)
         if kwargs['only_participant']:
-            q &= models.Q(attendances__attended=False)
+            q &= models.Q(participants__isnull=False)
         return self.invitations.filter(q).distinct()
     
     @classmethod
