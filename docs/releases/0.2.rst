@@ -1,0 +1,15 @@
+Woodstock 0.2.0 release notes
+******************************
+
+Changes
+=======
+
+*   Some bug fixes.
+*   Removed csv import and replaced it with django-admin-import.
+*   Added an Event navigation extension.
+*   Better participant form.
+*   Introduced some new views.
+
+Upgrade
+=======
+
