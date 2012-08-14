@@ -3,9 +3,11 @@ from woodstock.models import EventPart
 
 register = template.Library()
 
+
 class GetEventPartsNode(template.Node):
     def __init__(self, variable_name=None):
         self.variable_name = variable_name
+
     def render(self, context):
         if self.variable_name is None:
             return u''
@@ -18,6 +20,7 @@ class GetEventPartsNode(template.Node):
         event_parts = EventPart.objects.filter(event=event).filter(attendances__participant=person)
         context[self.variable_name] = event_parts
         return u''
+
 
 def get_subscribed_event_parts(parser, token):
     args = token.split_contents()

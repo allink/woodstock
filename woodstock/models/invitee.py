@@ -3,12 +3,13 @@ from django.db import models
 
 from woodstock.models.person import Person
 
+
 #-----------------------------------------------------------------------------
 # Invitee
 #-----------------------------------------------------------------------------
 class Invitee(Person):
     groups = models.ManyToManyField('woodstock.Group', related_name="invitations", blank=True)
-    
+
     class Meta:
         verbose_name = 'Einladung'
         verbose_name_plural = 'Einladungen'
@@ -19,13 +20,14 @@ class Invitee(Person):
     def register_extension(cls, register_fn):
         register_fn(cls, InviteeAdmin)
 
+
 class InviteeAdmin(admin.ModelAdmin):
     list_display = ('firstname', 'surname', 'email', 'language',)
-    list_filter   = ('language', 'groups',)
+    list_filter = ('language', 'groups',)
     search_fields = ('firstname', 'surname', 'email')
     readonly_fields = ('last_login',)
     filter_horizontal = ('groups',)
-    
+
 try:
     from admin_import.options import add_import
 except ImportError, e:
@@ -34,4 +36,4 @@ except ImportError, e:
 else:
     from django.conf import settings as django_settings
     if 'admin_import' in django_settings.INSTALLED_APPS:
-        add_import(InviteeAdmin, add_button=True)    
+        add_import(InviteeAdmin, add_button=True)

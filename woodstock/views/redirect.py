@@ -7,7 +7,8 @@ try:
     from feincms.content.application.models import reverse
 except ImportError:
     from django.core.urlresolvers import reverse
-    
+
+
 def next_active_event(request):
     try:
         event = Event.objects.pending()[0]
