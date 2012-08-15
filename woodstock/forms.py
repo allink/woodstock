@@ -4,7 +4,7 @@ from woodstock.models import Participant, Invitee, Salutation
 from woodstock import settings
 from woodstock.fields import EventPartsChoiceField, EventPartsMultipleChoiceField
 
-from pennyblack import send_newsletter   
+from pennyblack import send_newsletter
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.forms import SetPasswordForm as AuthSetPasswordForm
@@ -13,10 +13,11 @@ from django.db.models.query import QuerySet
 from django.utils import translation
 from django.utils.translation import ugettext_lazy as _
 
+
 class ParticipantForm(forms.ModelForm):
-    salutation = forms.ModelChoiceField(queryset= Salutation.objects.localized(),
+    salutation = forms.ModelChoiceField(queryset=Salutation.objects.localized(),
                                         label=_('Salutation'))
-    
+
     class Meta:
         model = Participant
         fields = settings.PARTICIPANT_FORM_FIELDS
@@ -35,7 +36,7 @@ class ParticipantForm(forms.ModelForm):
         if isinstance(self.request.user, Invitee) and 'instance' not in kwargs \
             and settings.PARTICIPANT_FORM_PREPOPULATE:
             kwargs['initial'] = tuple((field, getattr(self.request.user, field, None)) for field in self._meta.fields)
-        super(ParticipantForm,self).__init__(*args, **kwargs)
+        super(ParticipantForm, self).__init__(*args, **kwargs)
         if 'event_parts_queryset' in locals():
             if settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS:
                 self.fields['event_part'] = EventPartsMultipleChoiceField(queryset=event_parts_queryset, label=settings.PARTICIPANT_FORM_PART_FIELD_LABEL)
@@ -43,7 +44,7 @@ class ParticipantForm(forms.ModelForm):
                 self.fields['event_part'] = EventPartsChoiceField(queryset=event_parts_queryset, label=settings.PARTICIPANT_FORM_PART_FIELD_LABEL)
         if not 'salutation' in self._meta.fields:
             del self.fields['salutation']
-                
+
     def save(self):
         super(ParticipantForm, self).save(commit=False)
         if isinstance(self.request.user, Invitee):
@@ -66,7 +67,8 @@ class ParticipantForm(forms.ModelForm):
             self.instance.delete()
             return False
         return self.instance
-    
+
+
 class LostPasswordForm(forms.Form):
     email = forms.EmailField(label=_("E-mail"), max_length=75)
 
@@ -85,7 +87,8 @@ class LostPasswordForm(forms.Form):
         Generates a one-use only link for resetting password and sends to the user
         """
         for user in self.users_cache:
-            send_newsletter(settings.LOST_PASSWORD_NEWSLETTER,user)
+            send_newsletter(settings.LOST_PASSWORD_NEWSLETTER, user)
+
 
 class SetPasswordForm(AuthSetPasswordForm):
     """
@@ -121,6 +124,7 @@ class SetPasswordForm(AuthSetPasswordForm):
             self.user.save()
         return self.user
 
+
 class PasswordChangeForm(SetPasswordForm):
     """
     A form that lets a user change his/her password by entering
@@ -137,24 +141,24 @@ class PasswordChangeForm(SetPasswordForm):
             raise forms.ValidationError(_("Your old password was entered incorrectly. Please enter it again."))
         return old_password
 PasswordChangeForm.base_fields.keyOrder = ['old_password', 'new_password1', 'new_password2']
-    
+
 
 class RegisterForm(forms.ModelForm):
     password1 = forms.CharField(label=_("Password"), widget=forms.PasswordInput)
     password2 = forms.CharField(label=_("Password confirmation"), widget=forms.PasswordInput)
-    salutation = forms.ModelChoiceField(queryset= Salutation.objects.localized(),
+    salutation = forms.ModelChoiceField(queryset=Salutation.objects.localized(),
         label=_('Salutation'), empty_label=None, widget=forms.RadioSelect)
 
     class Meta:
         model = Participant
         exclude = ('last_login', 'language', 'is_active', 'invitee', 'password', 'event_parts')
-    
+
     def clean_password1(self):
         password1 = self.cleaned_data["password1"]
         if len(password1) < settings.PARTICIPANT_MIN_PASSWORD_LENGTH:
             raise forms.ValidationError(_("The password needs to be %d characters long.") % settings.PARTICIPANT_MIN_PASSWORD_LENGTH)
         return password1
-        
+
     def clean_password2(self):
         password1 = self.cleaned_data.get("password1", "")
         password2 = self.cleaned_data["password2"]
@@ -171,6 +175,7 @@ class RegisterForm(forms.ModelForm):
         if not participant.is_active:
             send_newsletter(settings.ACTIVATION_NEWSLETTER, participant)
         return participant
+
 
 class CodeAuthenticationForm(forms.Form):
     """
