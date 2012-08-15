@@ -5,16 +5,17 @@ from django.forms.models import ModelChoiceIterator
 from django.forms.util import flatatt
 from django.forms.widgets import RadioFieldRenderer, RadioInput, CheckboxInput, CheckboxSelectMultiple
 from django.utils.encoding import force_unicode
-from django.utils.html import escape, conditional_escape
+from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
 
 from woodstock import settings
+
 
 class EventPartRadioInput(RadioInput):
     def __init__(self, name, value, attrs, choice, index):
         self.obj = choice[2]
         choice = (choice[0], choice[1])
-        return super(EventPartRadioInput,self).__init__(name, value, attrs, choice, index)
+        return super(EventPartRadioInput, self).__init__(name, value, attrs, choice, index)
 
     def __unicode__(self):
         if 'id' in self.attrs:
@@ -42,19 +43,20 @@ class EventPartRadioFieldRenderer(RadioFieldRenderer):
         for i, choice in enumerate(self.choices):
             yield EventPartRadioInput(self.name, self.value, self.attrs.copy(), choice, i)
 
+
 class EventPartsChoiceIterator(ModelChoiceIterator):
     def choice(self, obj):
-        return (self.field.prepare_value(obj), self.field.label_from_instance(obj),obj)
+        return (self.field.prepare_value(obj), self.field.label_from_instance(obj), obj)
 
 
 class EventPartsChoiceField(forms.ModelChoiceField):
     def __init__(self, queryset, **kwargs):
-        super(EventPartsChoiceField,self).__init__(
+        super(EventPartsChoiceField, self).__init__(
             queryset=queryset.order_by('date_start'),
             widget=forms.RadioSelect(renderer=EventPartRadioFieldRenderer),
             empty_label=None, **kwargs)
         self.choices = EventPartsChoiceIterator(self)
-        
+
 
 class EventPartCheckboxInput(CheckboxInput):
     def __init__(self, attrs=None, check_test=bool, obj=None):
@@ -65,7 +67,7 @@ class EventPartCheckboxInput(CheckboxInput):
         final_attrs = self.build_attrs(attrs, type='checkbox', name=name)
         try:
             result = self.check_test(value)
-        except: # Silently catch exceptions
+        except:  # Silently catch exceptions
             result = False
         if result:
             final_attrs['checked'] = 'checked'
@@ -79,7 +81,8 @@ class EventPartCheckboxInput(CheckboxInput):
 
 class EventPartsCheckboxSelectMultiple(CheckboxSelectMultiple):
     def render(self, name, value, attrs=None, choices=()):
-        if value is None: value = []
+        if value is None:
+            value = []
         has_id = attrs and 'id' in attrs
         final_attrs = self.build_attrs(attrs, name=name)
         output = [u'<ul>']
@@ -109,7 +112,7 @@ class EventPartsCheckboxSelectMultiple(CheckboxSelectMultiple):
 
 class EventPartsMultipleChoiceField(forms.ModelMultipleChoiceField):
     def __init__(self, queryset, **kwargs):
-        super(EventPartsMultipleChoiceField,self).__init__(
+        super(EventPartsMultipleChoiceField, self).__init__(
             queryset=queryset.order_by('date_start'),
             widget=EventPartsCheckboxSelectMultiple(),
             **kwargs)

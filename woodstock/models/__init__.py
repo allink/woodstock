@@ -1,5 +1,5 @@
 from woodstock.models.extendable import ExtendableMixin
-from woodstock.models.attendance import Attendance    
+from woodstock.models.attendance import Attendance
 from woodstock.models.event_part import EventPart
 from woodstock.models.person import Person
 from woodstock.models.participant import Participant

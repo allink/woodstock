@@ -1,24 +1,22 @@
 from woodstock import settings
 from woodstock.models import Participant
 from woodstock.views import get_redirect_url
-from woodstock.views.decorators import registration_required, \
-    invitation_required
+from woodstock.views.decorators import registration_required
 from woodstock.forms import SetPasswordForm, PasswordChangeForm, \
     ParticipantForm, LostPasswordForm
 
-from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.core.context_processors import csrf
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.utils import translation
-from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.csrf import csrf_protect
+
 
 def create_participant(request):
     # todo: hier implementieren
     pass
+
 
 def start(request):
     """
@@ -26,6 +24,7 @@ def start(request):
     """
     # todo: hier implementieren
     pass
+
 
 def lost_password_view(request, template_name='woodstock/registration/lost_password.html'):
     if request.method == 'POST':
@@ -36,9 +35,10 @@ def lost_password_view(request, template_name='woodstock/registration/lost_passw
             return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
     if 'lost_password_form' not in locals():
         lost_password_form = LostPasswordForm()
-    context = {'lost_password_form':lost_password_form}
+    context = {'lost_password_form': lost_password_form}
     context.update(csrf(request))
-    return render_to_response(template_name, context,context_instance = RequestContext(request))
+    return render_to_response(template_name, context, context_instance=RequestContext(request))
+
 
 @registration_required
 @csrf_protect
@@ -55,9 +55,10 @@ def set_new_password(request, set_password_form=SetPasswordForm, template_name='
             return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
     else:
         form = set_password_form(None)
-    context = {'form':form}
+    context = {'form': form}
     context.update(csrf(request))
-    return render_to_response(template_name, context,context_instance = RequestContext(request))
+    return render_to_response(template_name, context, context_instance=RequestContext(request))
+
 
 @registration_required
 @csrf_protect
@@ -74,9 +75,10 @@ def change_password(request, password_change_form=PasswordChangeForm, template_n
             return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
     else:
         form = password_change_form(user)
-    context = {'form':form}
+    context = {'form': form}
     context.update(csrf(request))
-    return render_to_response(template_name, context,context_instance = RequestContext(request))
+    return render_to_response(template_name, context, context_instance=RequestContext(request))
+
 
 def activate(request):
     """
@@ -86,7 +88,8 @@ def activate(request):
         return HttpResponseRedirect('/')
     request.user.activate()
     return render_to_response('woodstock/registration/activation_completed.html',
-        {'user':request.user},context_instance = RequestContext(request))
+        {'user': request.user}, context_instance=RequestContext(request))
+
 
 def change_userdata(request, change_userdata_form=ParticipantForm):
     user = request.user
@@ -98,8 +101,6 @@ def change_userdata(request, change_userdata_form=ParticipantForm):
             return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
     else:
         form = change_userdata_form(instance=user)
-    context = {'form':form}
+    context = {'form': form}
     context.update(csrf(request))
-    return render_to_response('woodstock/registration/change_userdata.html', context,context_instance = RequestContext(request))
-
-    
+    return render_to_response('woodstock/registration/change_userdata.html', context, context_instance=RequestContext(request))

@@ -84,6 +84,12 @@ class Event(models.Model, TranslatedObjectMixin, JobUnitMixin, ExtendableMixin):
         self.date_end = last_part.date_end
         self.save()
 
+    @models.permalink
+    def get_absolute_url(self):
+        return ('event_detail', (), {
+            'slug': self.slug,
+            })
+
     @property
     def participant_count(self):
         return Participant.objects.filter(attendances__confirmed=True)\
@@ -229,4 +235,4 @@ class EventAdmin(JobUnitAdmin):
 
     def change_view(self, request, object_id, extra_context={}):
         extra_context['export_excel_active'] = EXPORT_EXCEL_ACTIVE
-        return super(EventAdmin, self).change_view(request, object_id, extra_context)
+        return super(EventAdmin, self).change_view(request, object_id, extra_context=extra_context)

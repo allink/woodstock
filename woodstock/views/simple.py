@@ -1,71 +1,62 @@
-from woodstock import settings
-from woodstock.models import Event, EventPart
-from woodstock.forms import ParticipantForm
-from woodstock.views import get_redirect_url
-from woodstock.views.decorators import registration_required, \
-    invitation_required
+from django.shortcuts import get_object_or_404
+from django.views.generic import ListView, DetailView, FormView
 
-from feincms.content.application.models import reverse
+from woodstock import settings
+from woodstock.models import Event
+from woodstock.forms import ParticipantForm
+from woodstock.views.base import WoodstockView
 
 from django.contrib import messages
-from django.core.context_processors import csrf
-from django.http import HttpResponseRedirect, HttpResponse
-from django.shortcuts import render_to_response
-from django.template import RequestContext
-from django.utils import translation
-from django.utils.translation import ugettext_lazy as _
-from django.views.decorators.csrf import csrf_protect
-
-def index(request):
-    return render_to_response(
-        'woodstock/simple/index.html',
-        {
-            'events': Event.objects.active(),
-        },
-        context_instance = RequestContext(request),
-    )
-
-index_invitation_required = invitation_required(index)
-index_registration_required = registration_required(index)
+from django.http import HttpResponseRedirect
 
 
-def detail(request, slug):
-    event = Event.objects.get_by_slug(slug)
-    return render_to_response(
-        'woodstock/simple/detail.html',
-        {
-            'event': event,
-        },
-        context_instance = RequestContext(request),
-    )
+class EventListView(WoodstockView, ListView):
+    template_name = 'woodstock/simple/list.html'
 
-detail_invitation_required = invitation_required(detail)
-detail_registration_required = registration_required(detail)
+    def get_queryset(self):
+        return Event.objects.active()
 
-@csrf_protect
-def signup(request, slug, participant_form=ParticipantForm):
-    """
-    Signup view with all possible parts of an event listed and selectable
-    """
-    event = Event.objects.get_by_slug(slug)
-    if request.method == 'POST':
-        form = ParticipantForm(request.POST, request=request, event_parts_queryset=event.parts.active())
-        if form.is_valid():
-            if form.save():
-                messages.success(request, settings.MESSAGES_SIMPLE_SIGNUP_SUCCESS)
-                return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
-            else:
-                messages.error(request, settings.MESSAGES_SIMPLE_SIGNUP_FAILED)
-                return HttpResponseRedirect(get_redirect_url(settings.POST_ACTION_REDIRECT_URL))
-    else:
-        form = ParticipantForm(request=request , event_parts_queryset=event.parts.active())
-    context = {'form': form, 'event': event}
-    context.update(csrf(request))
-    return render_to_response(
-        'woodstock/simple/signup.html',
-        context,
-        context_instance = RequestContext(request),
-    )
 
-signup_invitation_required = invitation_required(signup)
-signup_registration_required = registration_required(signup)
+class EventDetailView(WoodstockView, DetailView):
+    template_name = 'woodstock/simple/detail.html'
+
+    def get_queryset(self):
+        return Event.objects.active()
+
+
+class EventSignupView(WoodstockView, FormView):
+    template_name = 'woodstock/simple/signup.html'
+    context_object_name = None
+    form_class = ParticipantForm
+
+    def get_form_kwargs(self):
+        kwargs = super(EventSignupView, self).get_form_kwargs()
+        kwargs.update(request=self.request, event_parts_queryset=self.event.parts.active())
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        kwargs = super(EventSignupView, self).get_context_data(**kwargs)
+        kwargs.update(object=self.event)
+        if self.context_object_name:
+            kwargs.update({self.context_object_name: self.event})
+        return kwargs
+
+    @property
+    def event(self):
+        if hasattr(self, '_event'):
+            return self._event
+        setattr(self, '_event', get_object_or_404(Event, slug=self.kwargs.get('slug', None)))
+        return self._event
+
+    def form_valid(self, form):
+        if form.save():
+            messages.success(self.request, settings.MESSAGES_SIMPLE_SIGNUP_SUCCESS)
+            return HttpResponseRedirect(self.get_success_url())
+        else:
+            messages.error(self.request, settings.MESSAGES_SIMPLE_SIGNUP_FAILED)
+            return HttpResponseRedirect('.')
+
+# legacy views
+index = EventListView(context_object_name='events')
+detail = EventDetailView(context_object_name='event')
+signup = EventSignupView(context_object_name='event')
