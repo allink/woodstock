@@ -28,10 +28,15 @@ class EventSignupView(WoodstockView, FormView):
     template_name = 'woodstock/simple/signup.html'
     context_object_name = None
     form_class = ParticipantForm
+    autoattend_all_parts = False
 
     def get_form_kwargs(self):
         kwargs = super(EventSignupView, self).get_form_kwargs()
-        kwargs.update(request=self.request, event_parts_queryset=self.event.parts.active())
+        kwargs.update(request=self.request)
+        if self.autoattend_all_parts:
+            kwargs.update(autoattend_parts=self.event.parts.active())
+        else:
+            kwargs.update(event_parts_queryset=self.event.parts.active())
         return kwargs
 
     def get_context_data(self, **kwargs):
