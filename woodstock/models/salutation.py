@@ -14,7 +14,13 @@ class SalutationManager(models.Manager):
         """
         Returns a queryset with all salutations aviable in the current language
         """
-        return self.filter(language=translation.get_language())
+        queryset = self.filter(language=translation.get_language())
+        if queryset:
+            return queryset
+        queryset = self.filter(language=settings.LANGUAGE_CODE)
+        if queryset:
+            return queryset
+        return self.all()
 
     def get_or_add(self, text, language=None):
         try:

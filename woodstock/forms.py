@@ -15,8 +15,7 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class ParticipantForm(forms.ModelForm):
-    salutation = forms.ModelChoiceField(queryset=Salutation.objects.localized(),
-                                        label=_('Salutation'))
+    salutation = forms.ModelChoiceField(label=_('Salutation'), queryset=[])
 
     class Meta:
         model = Participant
@@ -37,13 +36,15 @@ class ParticipantForm(forms.ModelForm):
             and settings.PARTICIPANT_FORM_PREPOPULATE:
             kwargs['initial'] = tuple((field, getattr(self.request.user, field, None)) for field in self._meta.fields)
         super(ParticipantForm, self).__init__(*args, **kwargs)
+        if not 'salutation' in self._meta.fields:
+            del self.fields['salutation']
+        else:
+            self.fields['salutation'].queryset = Salutation.objects.localized()
         if 'event_parts_queryset' in locals():
             if settings.SUBSCRIPTION_ALLOW_MULTIPLE_EVENTPARTS:
                 self.fields['event_part'] = EventPartsMultipleChoiceField(queryset=event_parts_queryset, label=settings.PARTICIPANT_FORM_PART_FIELD_LABEL)
             else:
                 self.fields['event_part'] = EventPartsChoiceField(queryset=event_parts_queryset, label=settings.PARTICIPANT_FORM_PART_FIELD_LABEL)
-        if not 'salutation' in self._meta.fields:
-            del self.fields['salutation']
 
     def save(self):
         super(ParticipantForm, self).save(commit=False)
@@ -146,12 +147,16 @@ PasswordChangeForm.base_fields.keyOrder = ['old_password', 'new_password1', 'new
 class RegisterForm(forms.ModelForm):
     password1 = forms.CharField(label=_("Password"), widget=forms.PasswordInput)
     password2 = forms.CharField(label=_("Password confirmation"), widget=forms.PasswordInput)
-    salutation = forms.ModelChoiceField(queryset=Salutation.objects.localized(),
+    salutation = forms.ModelChoiceField(queryset=[],
         label=_('Salutation'), empty_label=None, widget=forms.RadioSelect)
 
     class Meta:
         model = Participant
         exclude = ('last_login', 'language', 'is_active', 'invitee', 'password', 'event_parts')
+
+    def __init__(self, *args, **kwargs):
+        super(RegisterForm, self).__init__(*args, **kwargs)
+        self.fields['salutation'].queryset = Salutation.objects.localized()
 
     def clean_password1(self):
         password1 = self.cleaned_data["password1"]
