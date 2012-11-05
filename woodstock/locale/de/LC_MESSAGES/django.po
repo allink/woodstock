@@ -30,7 +30,7 @@ msgstr "Ihre Benutzerdaten wurden erfolgreich geändert."
 
 #: default_settings.py:44
 msgid "Thank you for signing up."
-msgstr "Vielen Dank für ihre Anmeldung."
+msgstr "Vielen Dank für Ihre Anmeldung."
 
 #: default_settings.py:45
 msgid "We are sorry, but your registration could not be saved."
