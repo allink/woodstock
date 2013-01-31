@@ -35,7 +35,7 @@ class Group(models.Model, JobUnitMixin):
 
     @classmethod
     def register_extension(cls, register_fn):
-        register_fn(cls, GroupAdmin, GroupAdminForm)
+        register_fn(cls, GroupAdmin)
 
 
 class GroupAdmin(JobUnitAdmin):
