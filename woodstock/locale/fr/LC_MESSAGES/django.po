@@ -33,7 +33,7 @@ msgstr ""
 
 #: default_settings.py:44
 msgid "Thank you for signing up."
-msgstr ""
+msgstr "Merci pour votre inscription"
 
 #: default_settings.py:45
 msgid "We are sorry, but your registration could not be saved."
@@ -41,7 +41,7 @@ msgstr ""
 
 #: forms.py:15 forms.py:135
 msgid "Salutation"
-msgstr ""
+msgstr "Appel"
 
 #: forms.py:60
 msgid "E-mail"
@@ -112,11 +112,11 @@ msgstr ""
 
 #: models/person.py:18
 msgid "Firstname"
-msgstr ""
+msgstr "Prénom"
 
 #: models/person.py:19
 msgid "Surname"
-msgstr ""
+msgstr "Nom"
 
 #: models/person.py:20
 msgid "E-Mail"
@@ -169,8 +169,8 @@ msgstr ""
 
 #: templates/woodstock/simple/signup.html:3
 msgid "Personal Data"
-msgstr ""
+msgstr "Donnée personnels"
 
 #: templates/woodstock/simple/signup.html:7
 msgid "send"
-msgstr ""
+msgstr "envoyer"
