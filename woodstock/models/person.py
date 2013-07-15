@@ -12,7 +12,7 @@ from woodstock.models.extendable import ExtendableMixin
 # Person
 #-----------------------------------------------------------------------------
 class Person(models.Model, NewsletterReceiverMixin, ExtendableMixin):
-    salutation = models.ForeignKey('woodstock.Salutation', null=True)
+    salutation = models.ForeignKey('woodstock.Salutation', verbose_name=_('Salutation'), null=True)
     firstname = models.CharField(verbose_name=_('Firstname'), max_length=100)
     surname = models.CharField(verbose_name=_('Surname'), max_length=100)
     email = models.EmailField(verbose_name=_('E-Mail'), unique=settings.PERSON_EMAIL_UNIQUE)
