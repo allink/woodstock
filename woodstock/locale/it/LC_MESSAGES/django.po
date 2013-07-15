@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-06-23 13:55+0200\n"
+"POT-Creation-Date: 2013-07-15 15:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,92 +17,96 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-#: default_settings.py:41
+#: default_settings.py:39
 msgid ""
 "You should have received a email with instructions on how to change your "
 "password."
 msgstr ""
 
-#: default_settings.py:42
+#: default_settings.py:40
 msgid "Password successfully changed."
 msgstr ""
 
-#: default_settings.py:43
+#: default_settings.py:41
 msgid "Userdata successfully changed."
 msgstr ""
 
-#: default_settings.py:44
+#: default_settings.py:42
 msgid "Thank you for signing up."
 msgstr ""
 
-#: default_settings.py:45
+#: default_settings.py:43
 msgid "We are sorry, but your registration could not be saved."
 msgstr "Grazie per la registrazione"
 
-#: forms.py:15 forms.py:135
+#: default_settings.py:48
+msgid "event parts"
+msgstr ""
+
+#: default_settings.py:50
+msgid "fully booked"
+msgstr ""
+
+#: forms.py:18 forms.py:151 models/person.py:15
 msgid "Salutation"
 msgstr "Appellativo"
 
-#: forms.py:60
+#: forms.py:74
 msgid "E-mail"
 msgstr ""
 
-#: forms.py:69
+#: forms.py:83
 msgid ""
 "That e-mail address doesn't have an associated user account. Are you sure "
 "you've registered?"
 msgstr ""
 
-#: forms.py:90 forms.py:126
+#: forms.py:105 forms.py:142
 msgid "Your old password was entered incorrectly. Please enter it again."
 msgstr ""
 
-#: forms.py:96 forms.py:144
+#: forms.py:111 forms.py:164
 #, python-format
 msgid "The password needs to be %d characters long."
 msgstr ""
 
-#: forms.py:104 forms.py:151
+#: forms.py:119 forms.py:171
 msgid "The two password fields didn't match."
 msgstr ""
 
-#: forms.py:118
+#: forms.py:134
 msgid "Old password"
 msgstr ""
 
-#: forms.py:132 forms.py:169 models/person.py:21
+#: forms.py:148 forms.py:190 models/person.py:19
 msgid "Password"
 msgstr ""
 
-#: forms.py:133
+#: forms.py:149
 msgid "Password confirmation"
 msgstr ""
 
-#: forms.py:188
+#: forms.py:209
 msgid ""
 "Please enter a correct username and password. Note that both fields are case-"
 "sensitive."
 msgstr ""
 
-#: forms.py:190
+#: forms.py:211
 msgid "This account is inactive."
 msgstr ""
 
-#: forms.py:194
+#: forms.py:215
 msgid ""
 "Your Web browser doesn't appear to have cookies enabled. Cookies are "
 "required for logging in."
 msgstr ""
 
-#: api/handlers.py:38
-msgid "Address already used."
-msgstr ""
-
-#: models/participant.py:66 models/participant.py:73
+#: models/participant.py:67 models/participant.py:74
 msgid "You can only attend one event."
 msgstr ""
 
-#: models/participant.py:75
+#: models/participant.py:76
 msgid "You can only attend one eventpart per event."
 msgstr ""
 
@@ -110,39 +114,39 @@ msgstr ""
 msgid "Only invited Persons can register."
 msgstr ""
 
-#: models/person.py:18
+#: models/person.py:16
 msgid "Firstname"
 msgstr "Nome"
 
-#: models/person.py:19
+#: models/person.py:17
 msgid "Surname"
 msgstr "Cognome"
 
-#: models/person.py:20
+#: models/person.py:18
 msgid "E-Mail"
 msgstr ""
 
-#: models/person.py:22
+#: models/person.py:20
 msgid "Active"
 msgstr ""
 
-#: models/person.py:23
+#: models/person.py:21
 msgid "last login"
 msgstr ""
 
-#: models/salutation.py:31
+#: models/salutation.py:39
 msgid "unisex"
 msgstr ""
 
-#: models/salutation.py:31
+#: models/salutation.py:39
 msgid "male"
 msgstr ""
 
-#: models/salutation.py:31
+#: models/salutation.py:39
 msgid "female"
 msgstr ""
 
-#: models/salutation.py:32
+#: models/salutation.py:40
 msgid "Language"
 msgstr ""
 
@@ -163,7 +167,7 @@ msgstr ""
 msgid "Sign up"
 msgstr ""
 
-#: templates/woodstock/simple/index.html:7
+#: templates/woodstock/simple/list.html:7
 msgid "Details / Sign up"
 msgstr ""
 
